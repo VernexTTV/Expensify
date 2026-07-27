@@ -15,7 +15,8 @@ import java.util.*
 
 class ExpenseAdapter(
     private val onEditClick: (Expense) -> Unit,
-    private val onDeleteClick: (Expense) -> Unit
+    private val onDeleteClick: (Expense) -> Unit,
+    private val getCategoryName: (Long?) -> String? = { null }
 ) : ListAdapter<Expense, ExpenseAdapter.ExpenseViewHolder>(ExpenseDiffCallback()) {
     
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ExpenseViewHolder {
@@ -26,22 +27,37 @@ class ExpenseAdapter(
     
     override fun onBindViewHolder(holder: ExpenseViewHolder, position: Int) {
         val expense = getItem(position)
-        holder.bind(expense, onEditClick, onDeleteClick)
+        holder.bind(expense, onEditClick, onDeleteClick, getCategoryName)
     }
     
     class ExpenseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val dateText: TextView = itemView.findViewById(R.id.tvDate)
         private val amountText: TextView = itemView.findViewById(R.id.tvAmount)
+        private val categoryText: TextView = itemView.findViewById(R.id.tvCategory)
         private val paymentModeText: TextView = itemView.findViewById(R.id.tvPaymentMode)
         private val detailsText: TextView = itemView.findViewById(R.id.tvDetails)
         private val descriptionText: TextView = itemView.findViewById(R.id.tvDescription)
         private val editButton: View = itemView.findViewById(R.id.btnEdit)
         private val deleteButton: View = itemView.findViewById(R.id.btnDelete)
         
-        fun bind(expense: Expense, onEditClick: (Expense) -> Unit, onDeleteClick: (Expense) -> Unit) {
+        fun bind(
+            expense: Expense, 
+            onEditClick: (Expense) -> Unit, 
+            onDeleteClick: (Expense) -> Unit,
+            getCategoryName: (Long?) -> String?
+        ) {
             val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
             dateText.text = dateFormat.format(Date(expense.date))
             amountText.text = "₹${String.format("%.2f", expense.amount)}"
+            
+            // Show category if available
+            val categoryName = getCategoryName(expense.categoryId)
+            if (!categoryName.isNullOrEmpty()) {
+                categoryText.visibility = View.VISIBLE
+                categoryText.text = categoryName
+            } else {
+                categoryText.visibility = View.GONE
+            }
             
             val paymentModeDisplay = when(expense.paymentMode) {
                 PaymentMode.CREDIT_CARD -> "Credit Card"

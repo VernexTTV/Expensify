@@ -24,4 +24,14 @@ class Converters {
     fun toPaymentMode(value: String): PaymentMode {
         return PaymentMode.valueOf(value)
     }
+    
+    @TypeConverter
+    fun fromBankUpiType(value: BankUpiType): String {
+        return value.name
+    }
+    
+    @TypeConverter
+    fun toBankUpiType(value: String): BankUpiType {
+        return BankUpiType.valueOf(value)
+    }
 }

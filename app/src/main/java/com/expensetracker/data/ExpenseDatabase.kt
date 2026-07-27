@@ -5,16 +5,47 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [Expense::class], version = 1, exportSchema = false)
+@Database(entities = [Expense::class, Category::class, BankUpi::class], version = 2, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class ExpenseDatabase : RoomDatabase() {
     
     abstract fun expenseDao(): ExpenseDao
+    abstract fun categoryDao(): CategoryDao
+    abstract fun bankUpiDao(): BankUpiDao
     
     companion object {
         @Volatile
         private var INSTANCE: ExpenseDatabase? = null
+        
+        // Migration from version 1 to version 2
+        private val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Create categories table
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `categories` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `name` TEXT NOT NULL
+                    )
+                """)
+                
+                // Create bank_upi table
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `bank_upi` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `name` TEXT NOT NULL,
+                        `type` TEXT NOT NULL
+                    )
+                """)
+                
+                // Add categoryId column to expenses table (nullable)
+                database.execSQL("""
+                    ALTER TABLE expenses ADD COLUMN categoryId INTEGER
+                """)
+            }
+        }
         
         fun getDatabase(context: Context): ExpenseDatabase {
             return INSTANCE ?: synchronized(this) {
@@ -23,7 +54,7 @@ abstract class ExpenseDatabase : RoomDatabase() {
                     ExpenseDatabase::class.java,
                     "expense_database"
                 )
-                .fallbackToDestructiveMigration()
+                .addMigrations(MIGRATION_1_2)  // Add proper migration instead of destructive
                 .build()
                 INSTANCE = instance
                 instance

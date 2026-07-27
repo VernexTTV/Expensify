@@ -34,4 +34,58 @@ class ExpenseRepository(private val expenseDao: ExpenseDao) {
     fun getTotalExpensesByDateRange(startDate: Long, endDate: Long): LiveData<Double?> {
         return expenseDao.getTotalExpensesByDateRange(startDate, endDate)
     }
+    
+    fun getMultiFilteredExpenses(
+        startDates: List<Long>?,
+        endDates: List<Long>?,
+        minDate: Long?,
+        maxDate: Long?,
+        categoryIds: List<Long>?,
+        paymentModes: List<PaymentMode>?,
+        bankNames: List<String>?,
+        upiApps: List<String>?
+    ): LiveData<List<Expense>> {
+        return expenseDao.getMultiFilteredExpenses(
+            startDates, endDates, minDate, maxDate,
+            categoryIds, paymentModes, bankNames, upiApps
+        )
+    }
+    
+    fun getMultiFilteredTotal(
+        startDates: List<Long>?,
+        endDates: List<Long>?,
+        minDate: Long?,
+        maxDate: Long?,
+        categoryIds: List<Long>?,
+        paymentModes: List<PaymentMode>?,
+        bankNames: List<String>?,
+        upiApps: List<String>?
+    ): LiveData<Double?> {
+        return expenseDao.getMultiFilteredTotal(
+            startDates, endDates, minDate, maxDate,
+            categoryIds, paymentModes, bankNames, upiApps
+        )
+    }
+    
+    fun getFilteredExpenses(
+        startDate: Long?,
+        endDate: Long?,
+        categoryId: Long?,
+        paymentMode: PaymentMode?,
+        bankName: String?,
+        upiApp: String?
+    ): LiveData<List<Expense>> {
+        return expenseDao.getFilteredExpenses(startDate, endDate, categoryId, paymentMode, bankName, upiApp)
+    }
+    
+    fun getFilteredTotal(
+        startDate: Long?,
+        endDate: Long?,
+        categoryId: Long?,
+        paymentMode: PaymentMode?,
+        bankName: String?,
+        upiApp: String?
+    ): LiveData<Double?> {
+        return expenseDao.getFilteredTotal(startDate, endDate, categoryId, paymentMode, bankName, upiApp)
+    }
 }

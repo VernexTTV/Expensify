@@ -11,6 +11,7 @@ data class Expense(
     val date: Long, // Timestamp
     val amount: Double,
     val paymentMode: PaymentMode,
+    val categoryId: Long? = null, // Foreign key to Category
     val bankName: String? = null, // For Credit Card or Debit Card
     val upiApp: String? = null, // For UPI
     val description: String? = null // Optional note

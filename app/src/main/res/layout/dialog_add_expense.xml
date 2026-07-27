@@ -45,6 +45,37 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="Category"
+            android:textStyle="bold"
+            android:textSize="14sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="16dp">
+
+            <Spinner
+                android:id="@+id/spinnerCategory"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+
+            <Button
+                android:id="@+id/btnManageCategories"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Manage"
+                android:textAllCaps="false"
+                android:layout_marginStart="8dp"
+                style="?attr/materialButtonOutlinedStyle" />
+
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:text="Payment Mode"
             android:textStyle="bold"
             android:textSize="14sp" />
@@ -71,14 +102,29 @@
                 android:textStyle="bold"
                 android:textSize="14sp" />
 
-            <EditText
-                android:id="@+id/etBankUpi"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Enter bank name"
-                android:inputType="text"
+                android:orientation="horizontal"
                 android:layout_marginTop="4dp"
-                android:layout_marginBottom="16dp" />
+                android:layout_marginBottom="16dp">
+
+                <Spinner
+                    android:id="@+id/spinnerBankUpi"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+
+                <Button
+                    android:id="@+id/btnManageBankUpi"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Manage"
+                    android:textAllCaps="false"
+                    android:layout_marginStart="8dp"
+                    style="?attr/materialButtonOutlinedStyle" />
+
+            </LinearLayout>
 
         </LinearLayout>
 
