@@ -54,7 +54,8 @@ abstract class ExpenseDatabase : RoomDatabase() {
                     ExpenseDatabase::class.java,
                     "expense_database"
                 )
-                .addMigrations(MIGRATION_1_2)  // Add proper migration instead of destructive
+                .addMigrations(MIGRATION_1_2)
+                .fallbackToDestructiveMigration()  // If migration fails, recreate database
                 .build()
                 INSTANCE = instance
                 instance
