@@ -22,13 +22,13 @@ interface ExpenseDao {
     suspend fun insertExpense(expense: Expense): Long
     
     @Update
-    suspend fun updateExpense(expense: Expense)
+    suspend fun updateExpense(expense: Expense): Int
     
     @Delete
-    suspend fun deleteExpense(expense: Expense)
+    suspend fun deleteExpense(expense: Expense): Int
     
     @Query("DELETE FROM expenses")
-    suspend fun deleteAllExpenses()
+    suspend fun deleteAllExpenses(): Int
     
     @Query("SELECT SUM(amount) FROM expenses")
     fun getTotalExpenses(): LiveData<Double?>
