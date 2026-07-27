@@ -39,12 +39,12 @@ interface ExpenseDao {
     // Multi-select filtering method - returns expenses matching ANY of the selected criteria in each category
     @Query("""
         SELECT * FROM expenses 
-        WHERE (:startDates IS NULL OR date >= :minDate)
-        AND (:endDates IS NULL OR date <= :maxDate)
-        AND (:categoryIds IS NULL OR categoryId IN (:categoryIds))
-        AND (:paymentModes IS NULL OR paymentMode IN (:paymentModes))
-        AND (:bankNames IS NULL OR bankName IN (:bankNames))
-        AND (:upiApps IS NULL OR upiApp IN (:upiApps))
+        WHERE (CASE WHEN :minDate IS NULL THEN 1 ELSE date >= :minDate END)
+        AND (CASE WHEN :maxDate IS NULL THEN 1 ELSE date <= :maxDate END)
+        AND (CASE WHEN :categoryIds IS NULL THEN 1 ELSE categoryId IN (:categoryIds) END)
+        AND (CASE WHEN :paymentModes IS NULL THEN 1 ELSE paymentMode IN (:paymentModes) END)
+        AND (CASE WHEN :bankNames IS NULL THEN 1 ELSE bankName IN (:bankNames) END)
+        AND (CASE WHEN :upiApps IS NULL THEN 1 ELSE upiApp IN (:upiApps) END)
         ORDER BY date DESC
     """)
     fun getMultiFilteredExpenses(
@@ -60,12 +60,12 @@ interface ExpenseDao {
     
     @Query("""
         SELECT SUM(amount) FROM expenses 
-        WHERE (:startDates IS NULL OR date >= :minDate)
-        AND (:endDates IS NULL OR date <= :maxDate)
-        AND (:categoryIds IS NULL OR categoryId IN (:categoryIds))
-        AND (:paymentModes IS NULL OR paymentMode IN (:paymentModes))
-        AND (:bankNames IS NULL OR bankName IN (:bankNames))
-        AND (:upiApps IS NULL OR upiApp IN (:upiApps))
+        WHERE (CASE WHEN :minDate IS NULL THEN 1 ELSE date >= :minDate END)
+        AND (CASE WHEN :maxDate IS NULL THEN 1 ELSE date <= :maxDate END)
+        AND (CASE WHEN :categoryIds IS NULL THEN 1 ELSE categoryId IN (:categoryIds) END)
+        AND (CASE WHEN :paymentModes IS NULL THEN 1 ELSE paymentMode IN (:paymentModes) END)
+        AND (CASE WHEN :bankNames IS NULL THEN 1 ELSE bankName IN (:bankNames) END)
+        AND (CASE WHEN :upiApps IS NULL THEN 1 ELSE upiApp IN (:upiApps) END)
     """)
     fun getMultiFilteredTotal(
         startDates: List<Long>?,
