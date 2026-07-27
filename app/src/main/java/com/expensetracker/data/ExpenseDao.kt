@@ -36,45 +36,7 @@ interface ExpenseDao {
     @Query("SELECT SUM(amount) FROM expenses WHERE date BETWEEN :startDate AND :endDate")
     fun getTotalExpensesByDateRange(startDate: Long, endDate: Long): LiveData<Double?>
     
-    // Multi-select filtering method - returns expenses matching ANY of the selected criteria in each category
-    @Query("""
-        SELECT * FROM expenses 
-        WHERE (CASE WHEN :minDate IS NULL THEN 1 ELSE date >= :minDate END)
-        AND (CASE WHEN :maxDate IS NULL THEN 1 ELSE date <= :maxDate END)
-        AND (CASE WHEN :categoryIds IS NULL THEN 1 ELSE categoryId IN (:categoryIds) END)
-        AND (CASE WHEN :paymentModes IS NULL THEN 1 ELSE paymentMode IN (:paymentModes) END)
-        AND (CASE WHEN :bankNames IS NULL THEN 1 ELSE bankName IN (:bankNames) END)
-        AND (CASE WHEN :upiApps IS NULL THEN 1 ELSE upiApp IN (:upiApps) END)
-        ORDER BY date DESC
-    """)
-    fun getMultiFilteredExpenses(
-        minDate: Long?,
-        maxDate: Long?,
-        categoryIds: List<Long>?,
-        paymentModes: List<PaymentMode>?,
-        bankNames: List<String>?,
-        upiApps: List<String>?
-    ): LiveData<List<Expense>>
-    
-    @Query("""
-        SELECT SUM(amount) FROM expenses 
-        WHERE (CASE WHEN :minDate IS NULL THEN 1 ELSE date >= :minDate END)
-        AND (CASE WHEN :maxDate IS NULL THEN 1 ELSE date <= :maxDate END)
-        AND (CASE WHEN :categoryIds IS NULL THEN 1 ELSE categoryId IN (:categoryIds) END)
-        AND (CASE WHEN :paymentModes IS NULL THEN 1 ELSE paymentMode IN (:paymentModes) END)
-        AND (CASE WHEN :bankNames IS NULL THEN 1 ELSE bankName IN (:bankNames) END)
-        AND (CASE WHEN :upiApps IS NULL THEN 1 ELSE upiApp IN (:upiApps) END)
-    """)
-    fun getMultiFilteredTotal(
-        minDate: Long?,
-        maxDate: Long?,
-        categoryIds: List<Long>?,
-        paymentModes: List<PaymentMode>?,
-        bankNames: List<String>?,
-        upiApps: List<String>?
-    ): LiveData<Double?>
-    
-    // Legacy single-filter methods (keeping for backward compatibility)
+    // Single-select filtering methods
     @Query("""
         SELECT * FROM expenses 
         WHERE (:startDate IS NULL OR date >= :startDate)

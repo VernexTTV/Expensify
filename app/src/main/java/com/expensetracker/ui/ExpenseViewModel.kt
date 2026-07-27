@@ -90,36 +90,7 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
         return bankUpiRepository.getBankUpiByType(type)
     }
     
-    // Multi-select filter operations
-    fun getMultiFilteredExpenses(
-        minDate: Long?,
-        maxDate: Long?,
-        categoryIds: List<Long>?,
-        paymentModes: List<PaymentMode>?,
-        bankNames: List<String>?,
-        upiApps: List<String>?
-    ): LiveData<List<Expense>> {
-        return repository.getMultiFilteredExpenses(
-            minDate, maxDate,
-            categoryIds, paymentModes, bankNames, upiApps
-        )
-    }
-    
-    fun getMultiFilteredTotal(
-        minDate: Long?,
-        maxDate: Long?,
-        categoryIds: List<Long>?,
-        paymentModes: List<PaymentMode>?,
-        bankNames: List<String>?,
-        upiApps: List<String>?
-    ): LiveData<Double?> {
-        return repository.getMultiFilteredTotal(
-            minDate, maxDate,
-            categoryIds, paymentModes, bankNames, upiApps
-        )
-    }
-    
-    // Single-select filter operations (legacy)
+    // Single-select filter operations
     fun getFilteredExpenses(
         startDate: Long?,
         endDate: Long?,
