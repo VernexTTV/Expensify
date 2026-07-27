@@ -20,19 +20,32 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
     val allBankUpi: LiveData<List<BankUpi>>
     
     init {
-        val database = ExpenseDatabase.getDatabase(application)
-        val expenseDao = database.expenseDao()
-        val categoryDao = database.categoryDao()
-        val bankUpiDao = database.bankUpiDao()
-        
-        repository = ExpenseRepository(expenseDao)
-        categoryRepository = CategoryRepository(categoryDao)
-        bankUpiRepository = BankUpiRepository(bankUpiDao)
-        
-        allExpenses = repository.allExpenses
-        totalExpenses = repository.totalExpenses
-        allCategories = categoryRepository.allCategories
-        allBankUpi = bankUpiRepository.allBankUpi
+        android.util.Log.d("ExpenseTracker", "=== ViewModel init START ===")
+        try {
+            android.util.Log.d("ExpenseTracker", "Getting database instance...")
+            val database = ExpenseDatabase.getDatabase(application)
+            
+            android.util.Log.d("ExpenseTracker", "Getting DAOs...")
+            val expenseDao = database.expenseDao()
+            val categoryDao = database.categoryDao()
+            val bankUpiDao = database.bankUpiDao()
+            
+            android.util.Log.d("ExpenseTracker", "Creating repositories...")
+            repository = ExpenseRepository(expenseDao)
+            categoryRepository = CategoryRepository(categoryDao)
+            bankUpiRepository = BankUpiRepository(bankUpiDao)
+            
+            android.util.Log.d("ExpenseTracker", "Setting up LiveData...")
+            allExpenses = repository.allExpenses
+            totalExpenses = repository.totalExpenses
+            allCategories = categoryRepository.allCategories
+            allBankUpi = bankUpiRepository.allBankUpi
+            
+            android.util.Log.d("ExpenseTracker", "=== ViewModel init SUCCESS ===")
+        } catch (e: Exception) {
+            android.util.Log.e("ExpenseTracker", "=== ViewModel init FAILED ===", e)
+            throw e
+        }
     }
     
     // Expense operations

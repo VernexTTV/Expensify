@@ -48,16 +48,24 @@ abstract class ExpenseDatabase : RoomDatabase() {
         }
         
         fun getDatabase(context: Context): ExpenseDatabase {
+            android.util.Log.d("ExpenseTracker", "=== Database getDatabase START ===")
             return INSTANCE ?: synchronized(this) {
-                val instance = Room.databaseBuilder(
-                    context.applicationContext,
-                    ExpenseDatabase::class.java,
-                    "expense_database_v2"  // Changed name to force new database
-                )
-                .fallbackToDestructiveMigration()  // Recreate if any issues
-                .build()
-                INSTANCE = instance
-                instance
+                try {
+                    android.util.Log.d("ExpenseTracker", "Creating database instance...")
+                    val instance = Room.databaseBuilder(
+                        context.applicationContext,
+                        ExpenseDatabase::class.java,
+                        "expense_database_v2"  // Changed name to force new database
+                    )
+                    .fallbackToDestructiveMigration()  // Recreate if any issues
+                    .build()
+                    INSTANCE = instance
+                    android.util.Log.d("ExpenseTracker", "=== Database getDatabase SUCCESS ===")
+                    instance
+                } catch (e: Exception) {
+                    android.util.Log.e("ExpenseTracker", "=== Database getDatabase FAILED ===", e)
+                    throw e
+                }
             }
         }
     }

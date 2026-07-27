@@ -38,72 +38,94 @@ class MainActivity : AppCompatActivity() {
     private var currentFilterUpiApp: String? = null
     
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        android.util.Log.d("ExpenseTracker", "=== MainActivity onCreate START ===")
         
-        // Setup toolbar
-        val toolbar: androidx.appcompat.widget.Toolbar = findViewById(R.id.toolbar)
-        setSupportActionBar(toolbar)
-        supportActionBar?.title = "Expense Tracker"
-        
-        // Initialize views
-        recyclerView = findViewById(R.id.recyclerView)
-        emptyView = findViewById(R.id.tvEmpty)
-        totalAmountView = findViewById(R.id.tvTotalAmount)
-        fabAdd = findViewById(R.id.fabAdd)
-        
-        // Setup RecyclerView
-        adapter = ExpenseAdapter(
-            onEditClick = { expense -> showAddEditDialog(expense) },
-            onDeleteClick = { expense -> showDeleteConfirmation(expense) },
-            getCategoryName = { categoryId ->
-                categoryId?.let { id ->
-                    categories.find { it.id == id }?.name
+        try {
+            android.util.Log.d("ExpenseTracker", "Step 1: super.onCreate")
+            super.onCreate(savedInstanceState)
+            
+            android.util.Log.d("ExpenseTracker", "Step 2: setContentView")
+            setContentView(R.layout.activity_main)
+            
+            android.util.Log.d("ExpenseTracker", "Step 3: Setup toolbar")
+            // Setup toolbar
+            val toolbar: androidx.appcompat.widget.Toolbar = findViewById(R.id.toolbar)
+            setSupportActionBar(toolbar)
+            supportActionBar?.title = "Expense Tracker"
+            
+            android.util.Log.d("ExpenseTracker", "Step 4: Initialize views")
+            // Initialize views
+            recyclerView = findViewById(R.id.recyclerView)
+            emptyView = findViewById(R.id.tvEmpty)
+            totalAmountView = findViewById(R.id.tvTotalAmount)
+            fabAdd = findViewById(R.id.fabAdd)
+            
+            android.util.Log.d("ExpenseTracker", "Step 5: Setup RecyclerView adapter")
+            // Setup RecyclerView
+            adapter = ExpenseAdapter(
+                onEditClick = { expense -> showAddEditDialog(expense) },
+                onDeleteClick = { expense -> showDeleteConfirmation(expense) },
+                getCategoryName = { categoryId ->
+                    categoryId?.let { id ->
+                        categories.find { it.id == id }?.name
+                    }
+                }
+            )
+            
+            android.util.Log.d("ExpenseTracker", "Step 6: Set adapter and layout manager")
+            recyclerView.adapter = adapter
+            recyclerView.layoutManager = LinearLayoutManager(this)
+            
+            android.util.Log.d("ExpenseTracker", "Step 7: Setup ViewModel")
+            // Setup ViewModel
+            viewModel = ViewModelProvider(this)[ExpenseViewModel::class.java]
+            
+            android.util.Log.d("ExpenseTracker", "Step 8: Observe expenses")
+            // Observe expenses
+            viewModel.allExpenses.observe(this) { expenses ->
+                if (expenses.isEmpty()) {
+                    recyclerView.visibility = View.GONE
+                    emptyView.visibility = View.VISIBLE
+                } else {
+                    recyclerView.visibility = View.VISIBLE
+                    emptyView.visibility = View.GONE
+                    adapter.submitList(expenses)
                 }
             }
-        )
-        
-        recyclerView.adapter = adapter
-        recyclerView.layoutManager = LinearLayoutManager(this)
-        
-        // Setup ViewModel
-        viewModel = ViewModelProvider(this)[ExpenseViewModel::class.java]
-        
-        // Observe expenses
-        viewModel.allExpenses.observe(this) { expenses ->
-            if (expenses.isEmpty()) {
-                recyclerView.visibility = View.GONE
-                emptyView.visibility = View.VISIBLE
-            } else {
-                recyclerView.visibility = View.VISIBLE
-                emptyView.visibility = View.GONE
-                adapter.submitList(expenses)
+            
+            android.util.Log.d("ExpenseTracker", "Step 9: Observe total expenses")
+            // Observe total expenses
+            viewModel.totalExpenses.observe(this) { total ->
+                val totalText = if (total != null) {
+                    "Total: ₹${String.format("%.2f", total)}"
+                } else {
+                    "Total: ₹0.00"
+                }
+                totalAmountView.text = totalText
             }
-        }
-        
-        // Observe total expenses
-        viewModel.totalExpenses.observe(this) { total ->
-            val totalText = if (total != null) {
-                "Total: ₹${String.format("%.2f", total)}"
-            } else {
-                "Total: ₹0.00"
+            
+            android.util.Log.d("ExpenseTracker", "Step 10: Observe categories")
+            // Observe categories
+            viewModel.allCategories.observe(this) { categoryList ->
+                categories = categoryList
             }
-            totalAmountView.text = totalText
-        }
-        
-        // Observe categories
-        viewModel.allCategories.observe(this) { categoryList ->
-            categories = categoryList
-        }
-        
-        // Observe bank/UPI list
-        viewModel.allBankUpi.observe(this) { list ->
-            bankUpiList = list
-        }
-        
-        // Setup FAB
-        fabAdd.setOnClickListener {
-            showAddEditDialog(null)
+            
+            android.util.Log.d("ExpenseTracker", "Step 11: Observe bank/UPI list")
+            // Observe bank/UPI list
+            viewModel.allBankUpi.observe(this) { list ->
+                bankUpiList = list
+            }
+            
+            android.util.Log.d("ExpenseTracker", "Step 12: Setup FAB")
+            // Setup FAB
+            fabAdd.setOnClickListener {
+                showAddEditDialog(null)
+            }
+            
+            android.util.Log.d("ExpenseTracker", "=== MainActivity onCreate SUCCESS ===")
+        } catch (e: Exception) {
+            android.util.Log.e("ExpenseTracker", "=== MainActivity onCreate FAILED ===", e)
+            throw e
         }
     }
     
