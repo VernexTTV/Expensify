@@ -48,8 +48,6 @@ interface ExpenseDao {
         ORDER BY date DESC
     """)
     fun getMultiFilteredExpenses(
-        startDates: List<Long>?,
-        endDates: List<Long>?,
         minDate: Long?,
         maxDate: Long?,
         categoryIds: List<Long>?,
@@ -68,8 +66,6 @@ interface ExpenseDao {
         AND (CASE WHEN :upiApps IS NULL THEN 1 ELSE upiApp IN (:upiApps) END)
     """)
     fun getMultiFilteredTotal(
-        startDates: List<Long>?,
-        endDates: List<Long>?,
         minDate: Long?,
         maxDate: Long?,
         categoryIds: List<Long>?,

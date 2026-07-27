@@ -92,8 +92,6 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
     
     // Multi-select filter operations
     fun getMultiFilteredExpenses(
-        startDates: List<Long>?,
-        endDates: List<Long>?,
         minDate: Long?,
         maxDate: Long?,
         categoryIds: List<Long>?,
@@ -102,14 +100,12 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
         upiApps: List<String>?
     ): LiveData<List<Expense>> {
         return repository.getMultiFilteredExpenses(
-            startDates, endDates, minDate, maxDate,
+            minDate, maxDate,
             categoryIds, paymentModes, bankNames, upiApps
         )
     }
     
     fun getMultiFilteredTotal(
-        startDates: List<Long>?,
-        endDates: List<Long>?,
         minDate: Long?,
         maxDate: Long?,
         categoryIds: List<Long>?,
@@ -118,7 +114,7 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
         upiApps: List<String>?
     ): LiveData<Double?> {
         return repository.getMultiFilteredTotal(
-            startDates, endDates, minDate, maxDate,
+            minDate, maxDate,
             categoryIds, paymentModes, bankNames, upiApps
         )
     }

@@ -302,7 +302,7 @@ class MainActivity : AppCompatActivity() {
         
         // Apply multi-filters using the new ViewModel methods
         val filteredExpenses = viewModel.getMultiFilteredExpenses(
-            startDates, endDates, minDate, maxDate,
+            minDate, maxDate,
             categoryIds, paymentModes, bankNames, upiApps
         )
         
@@ -318,7 +318,7 @@ class MainActivity : AppCompatActivity() {
         }
         
         val filteredTotal = viewModel.getMultiFilteredTotal(
-            startDates, endDates, minDate, maxDate,
+            minDate, maxDate,
             categoryIds, paymentModes, bankNames, upiApps
         )
         
