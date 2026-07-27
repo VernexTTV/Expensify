@@ -16,19 +16,19 @@ interface ExpenseDao {
     fun getExpensesByPaymentMode(mode: PaymentMode): LiveData<List<Expense>>
     
     @Query("SELECT * FROM expenses WHERE id = :expenseId")
-    suspend fun getExpenseById(expenseId: Long): Expense?
+    fun getExpenseById(expenseId: Long): Expense?
     
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertExpense(expense: Expense): Long
+    fun insertExpense(expense: Expense): Long
     
     @Update
-    suspend fun updateExpense(expense: Expense): Int
+    fun updateExpense(expense: Expense)
     
     @Delete
-    suspend fun deleteExpense(expense: Expense): Int
+    fun deleteExpense(expense: Expense)
     
     @Query("DELETE FROM expenses")
-    suspend fun deleteAllExpenses(): Int
+    fun deleteAllExpenses()
     
     @Query("SELECT SUM(amount) FROM expenses")
     fun getTotalExpenses(): LiveData<Double?>

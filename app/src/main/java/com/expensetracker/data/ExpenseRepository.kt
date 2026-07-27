@@ -7,19 +7,19 @@ class ExpenseRepository(private val expenseDao: ExpenseDao) {
     val allExpenses: LiveData<List<Expense>> = expenseDao.getAllExpenses()
     val totalExpenses: LiveData<Double?> = expenseDao.getTotalExpenses()
     
-    suspend fun insert(expense: Expense): Long {
+    fun insert(expense: Expense): Long {
         return expenseDao.insertExpense(expense)
     }
     
-    suspend fun update(expense: Expense) {
+    fun update(expense: Expense) {
         expenseDao.updateExpense(expense)
     }
     
-    suspend fun delete(expense: Expense) {
+    fun delete(expense: Expense) {
         expenseDao.deleteExpense(expense)
     }
     
-    suspend fun getExpenseById(id: Long): Expense? {
+    fun getExpenseById(id: Long): Expense? {
         return expenseDao.getExpenseById(id)
     }
     

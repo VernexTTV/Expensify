@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import com.expensetracker.data.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class ExpenseViewModel(application: Application) : AndroidViewModel(application) {
@@ -20,15 +21,15 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
         totalExpenses = repository.totalExpenses
     }
     
-    fun insert(expense: Expense) = viewModelScope.launch {
+    fun insert(expense: Expense) = viewModelScope.launch(Dispatchers.IO) {
         repository.insert(expense)
     }
     
-    fun update(expense: Expense) = viewModelScope.launch {
+    fun update(expense: Expense) = viewModelScope.launch(Dispatchers.IO) {
         repository.update(expense)
     }
     
-    fun delete(expense: Expense) = viewModelScope.launch {
+    fun delete(expense: Expense) = viewModelScope.launch(Dispatchers.IO) {
         repository.delete(expense)
     }
     
