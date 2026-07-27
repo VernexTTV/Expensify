@@ -1,0 +1,37 @@
+package com.expensetracker.data
+
+import androidx.lifecycle.LiveData
+
+class ExpenseRepository(private val expenseDao: ExpenseDao) {
+    
+    val allExpenses: LiveData<List<Expense>> = expenseDao.getAllExpenses()
+    val totalExpenses: LiveData<Double?> = expenseDao.getTotalExpenses()
+    
+    suspend fun insert(expense: Expense): Long {
+        return expenseDao.insertExpense(expense)
+    }
+    
+    suspend fun update(expense: Expense) {
+        expenseDao.updateExpense(expense)
+    }
+    
+    suspend fun delete(expense: Expense) {
+        expenseDao.deleteExpense(expense)
+    }
+    
+    suspend fun getExpenseById(id: Long): Expense? {
+        return expenseDao.getExpenseById(id)
+    }
+    
+    fun getExpensesByDateRange(startDate: Long, endDate: Long): LiveData<List<Expense>> {
+        return expenseDao.getExpensesByDateRange(startDate, endDate)
+    }
+    
+    fun getExpensesByPaymentMode(mode: PaymentMode): LiveData<List<Expense>> {
+        return expenseDao.getExpensesByPaymentMode(mode)
+    }
+    
+    fun getTotalExpensesByDateRange(startDate: Long, endDate: Long): LiveData<Double?> {
+        return expenseDao.getTotalExpensesByDateRange(startDate, endDate)
+    }
+}

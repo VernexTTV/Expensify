@@ -1,0 +1,38 @@
+package com.expensetracker.data
+
+import androidx.lifecycle.LiveData
+import androidx.room.*
+
+@Dao
+interface ExpenseDao {
+    
+    @Query("SELECT * FROM expenses ORDER BY date DESC")
+    fun getAllExpenses(): LiveData<List<Expense>>
+    
+    @Query("SELECT * FROM expenses WHERE date BETWEEN :startDate AND :endDate ORDER BY date DESC")
+    fun getExpensesByDateRange(startDate: Long, endDate: Long): LiveData<List<Expense>>
+    
+    @Query("SELECT * FROM expenses WHERE paymentMode = :mode ORDER BY date DESC")
+    fun getExpensesByPaymentMode(mode: PaymentMode): LiveData<List<Expense>>
+    
+    @Query("SELECT * FROM expenses WHERE id = :expenseId")
+    suspend fun getExpenseById(expenseId: Long): Expense?
+    
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertExpense(expense: Expense): Long
+    
+    @Update
+    suspend fun updateExpense(expense: Expense)
+    
+    @Delete
+    suspend fun deleteExpense(expense: Expense)
+    
+    @Query("DELETE FROM expenses")
+    suspend fun deleteAllExpenses()
+    
+    @Query("SELECT SUM(amount) FROM expenses")
+    fun getTotalExpenses(): LiveData<Double?>
+    
+    @Query("SELECT SUM(amount) FROM expenses WHERE date BETWEEN :startDate AND :endDate")
+    fun getTotalExpensesByDateRange(startDate: Long, endDate: Long): LiveData<Double?>
+}
