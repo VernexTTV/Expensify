@@ -3,13 +3,12 @@ name: Build Android APK
 on:
   push:
     branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     
     steps:
     - name: Checkout code
@@ -21,17 +20,18 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
     
-    - name: Setup Gradle
-      uses: gradle/gradle-build-action@v2
-    
     - name: Make gradlew executable
       run: chmod +x gradlew
     
     - name: Build Debug APK
-      run: ./gradlew assembleDebug --stacktrace --info
+      run: ./gradlew assembleDebug --no-daemon --stacktrace
+      
+    - name: List APK files
+      run: ls -la app/build/outputs/apk/debug/
     
     - name: Upload APK
       uses: actions/upload-artifact@v4
+      if: success()
       with:
         name: expense-tracker-apk
         path: app/build/outputs/apk/debug/app-debug.apk
