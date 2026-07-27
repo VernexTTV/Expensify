@@ -52,10 +52,9 @@ abstract class ExpenseDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     ExpenseDatabase::class.java,
-                    "expense_database"
+                    "expense_database_v2"  // Changed name to force new database
                 )
-                .addMigrations(MIGRATION_1_2)
-                .fallbackToDestructiveMigration()  // If migration fails, recreate database
+                .fallbackToDestructiveMigration()  // Recreate if any issues
                 .build()
                 INSTANCE = instance
                 instance
