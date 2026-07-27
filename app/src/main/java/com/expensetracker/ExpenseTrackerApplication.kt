@@ -9,7 +9,7 @@ class ExpenseTrackerApplication : Application() {
         
         // Initialize Sentry for crash reporting
         SentryAndroid.init(this) { options ->
-            options.dsn = "https://2e3a4f5b6c7d8e9f0a1b2c3d4e5f6a7b@o4506123456789012.ingest.sentry.io/4506123456789013"
+            options.dsn = "https://06101fd1c53817ef65fee98c1fd001d7@o4511715743105024.ingest.us.sentry.io/4511807824920576"
             // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
             // We recommend adjusting this value in production.
             options.tracesSampleRate = 1.0
