@@ -25,6 +25,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var emptyView: TextView
     private lateinit var totalAmountView: TextView
     private lateinit var fabAdd: FloatingActionButton
+    private lateinit var categorySummaryLayout: LinearLayout
+    private lateinit var categorySummaryRecyclerView: RecyclerView
+    private lateinit var categorySummaryAdapter: CategorySummaryAdapter
     
     private var categories: List<Category> = emptyList()
     private var bankUpiList: List<BankUpi> = emptyList()
@@ -54,12 +57,14 @@ class MainActivity : AppCompatActivity() {
             setSupportActionBar(toolbar)
             supportActionBar?.title = "Expense Tracker"
             
-            android.util.Log.d("ExpenseTracker", "Step 4: Initialize views")
+            android:util.Log.d("ExpenseTracker", "Step 4: Initialize views")
             // Initialize views
             recyclerView = findViewById(R.id.recyclerView)
             emptyView = findViewById(R.id.tvEmpty)
             totalAmountView = findViewById(R.id.tvTotalAmount)
             fabAdd = findViewById(R.id.fabAdd)
+            categorySummaryLayout = findViewById(R.id.layoutCategorySummary)
+            categorySummaryRecyclerView = findViewById(R.id.rvCategorySummary)
             
             android.util.Log.d("ExpenseTracker", "Step 5: Setup RecyclerView adapter")
             // Setup RecyclerView
@@ -77,6 +82,11 @@ class MainActivity : AppCompatActivity() {
             recyclerView.adapter = adapter
             recyclerView.layoutManager = LinearLayoutManager(this)
             
+            // Setup Category Summary RecyclerView
+            categorySummaryAdapter = CategorySummaryAdapter()
+            categorySummaryRecyclerView.adapter = categorySummaryAdapter
+            categorySummaryRecyclerView.layoutManager = LinearLayoutManager(this)
+            
             android.util.Log.d("ExpenseTracker", "Step 7: Setup ViewModel")
             // Setup ViewModel
             viewModel = ViewModelProvider(this)[ExpenseViewModel::class.java]
@@ -87,10 +97,14 @@ class MainActivity : AppCompatActivity() {
                 if (expenses.isEmpty()) {
                     recyclerView.visibility = View.GONE
                     emptyView.visibility = View.VISIBLE
+                    categorySummaryLayout.visibility = View.GONE
                 } else {
                     recyclerView.visibility = View.VISIBLE
                     emptyView.visibility = View.GONE
                     adapter.submitList(expenses)
+                    
+                    // Calculate and show category summary
+                    updateCategorySummary(expenses)
                 }
             }
             
@@ -193,6 +207,10 @@ class MainActivity : AppCompatActivity() {
         val btnStartDate: Button = dialogView.findViewById(R.id.btnSelectStartDate)
         val btnEndDate: Button = dialogView.findViewById(R.id.btnSelectEndDate)
         
+        // Month/Year spinners
+        val spinnerMonth: android.widget.Spinner = dialogView.findViewById(R.id.spinnerMonth)
+        val spinnerYear: android.widget.Spinner = dialogView.findViewById(R.id.spinnerYear)
+        
         // Payment method checkboxes
         val cbCreditCard: CheckBox = dialogView.findViewById(R.id.cbCreditCard)
         val cbDebitCard: CheckBox = dialogView.findViewById(R.id.cbDebitCard)
@@ -243,6 +261,27 @@ class MainActivity : AppCompatActivity() {
                 calendar.get(Calendar.MONTH),
                 calendar.get(Calendar.DAY_OF_MONTH)
             ).show()
+        }
+        
+        // Setup Month Spinner
+        val months = listOf("All", "January", "February", "March", "April", "May", "June", 
+                           "July", "August", "September", "October", "November", "December")
+        val monthAdapter = android.widget.ArrayAdapter(this, android.R.layout.simple_spinner_item, months)
+        monthAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerMonth.adapter = monthAdapter
+        
+        // Setup Year Spinner (last 5 years to next 2 years)
+        val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+        val years = mutableListOf("All")
+        years.addAll((currentYear - 5..currentYear + 2).map { it.toString() })
+        val yearAdapter = android.widget.ArrayAdapter(this, android.R.layout.simple_spinner_item, years)
+        yearAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerYear.adapter = yearAdapter
+        
+        // Set current year as default
+        val currentYearIndex = years.indexOf(currentYear.toString())
+        if (currentYearIndex != -1) {
+            spinnerYear.setSelection(currentYearIndex)
         }
         
         // Store checkbox references
@@ -321,6 +360,32 @@ class MainActivity : AppCompatActivity() {
             val minAmount = etMinAmount.text.toString().toDoubleOrNull()
             val maxAmount = etMaxAmount.text.toString().toDoubleOrNull()
             
+            // Get month/year selection
+            val selectedMonth = spinnerMonth.selectedItemPosition // 0 = All, 1-12 = Jan-Dec
+            val selectedYearStr = spinnerYear.selectedItem.toString()
+            val selectedYear = if (selectedYearStr == "All") null else selectedYearStr.toIntOrNull()
+            
+            // Calculate date range from month/year if selected
+            var monthStartDate: Long? = null
+            var monthEndDate: Long? = null
+            
+            if (selectedMonth > 0 && selectedYear != null) {
+                val calendar = Calendar.getInstance()
+                calendar.set(selectedYear, selectedMonth - 1, 1, 0, 0, 0)
+                calendar.set(Calendar.MILLISECOND, 0)
+                monthStartDate = calendar.timeInMillis
+                
+                calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH))
+                calendar.set(Calendar.HOUR_OF_DAY, 23)
+                calendar.set(Calendar.MINUTE, 59)
+                calendar.set(Calendar.SECOND, 59)
+                monthEndDate = calendar.timeInMillis
+            }
+            
+            // Use month/year dates if selected, otherwise use date range
+            val finalStartDate = monthStartDate ?: selectedStartDate
+            val finalEndDate = monthEndDate ?: selectedEndDate
+            
             // Get selected payment modes
             val selectedPaymentModes = mutableListOf<PaymentMode>()
             if (cbCreditCard.isChecked) selectedPaymentModes.add(PaymentMode.CREDIT_CARD)
@@ -341,8 +406,8 @@ class MainActivity : AppCompatActivity() {
             applyFilters(
                 minAmount,
                 maxAmount,
-                selectedStartDate,
-                selectedEndDate,
+                finalStartDate,
+                finalEndDate,
                 selectedPaymentModes,
                 selectedCategoryIds,
                 selectedBanks,
@@ -915,6 +980,75 @@ class MainActivity : AppCompatActivity() {
                 tvType.text = if (bankUpi.type == BankUpiType.BANK) "Bank" else "UPI App"
                 btnEdit.setOnClickListener { onEditClick(bankUpi) }
                 btnDelete.setOnClickListener { onDeleteClick(bankUpi) }
+            }
+        }
+    }
+    
+    // Category Summary functionality
+    data class CategorySummary(
+        val categoryName: String,
+        val totalAmount: Double
+    )
+    
+    private fun updateCategorySummary(expenses: List<Expense>) {
+        if (expenses.isEmpty()) {
+            categorySummaryLayout.visibility = View.GONE
+            return
+        }
+        
+        // Group expenses by category and calculate totals
+        val categoryTotals = mutableMapOf<String, Double>()
+        
+        expenses.forEach { expense ->
+            val categoryName = expense.categoryId?.let { id ->
+                categories.find { it.id == id }?.name
+            } ?: "Uncategorized"
+            
+            categoryTotals[categoryName] = (categoryTotals[categoryName] ?: 0.0) + expense.amount
+        }
+        
+        // Convert to list and sort by amount descending
+        val summaryList = categoryTotals.map { (name, amount) ->
+            CategorySummary(name, amount)
+        }.sortedByDescending { it.totalAmount }
+        
+        // Show summary
+        if (summaryList.isNotEmpty()) {
+            categorySummaryLayout.visibility = View.VISIBLE
+            categorySummaryAdapter.submitList(summaryList)
+        } else {
+            categorySummaryLayout.visibility = View.GONE
+        }
+    }
+    
+    // Adapter for Category Summary
+    private inner class CategorySummaryAdapter : RecyclerView.Adapter<CategorySummaryAdapter.ViewHolder>() {
+        
+        private var summaries: List<CategorySummary> = emptyList()
+        
+        fun submitList(list: List<CategorySummary>) {
+            summaries = list
+            notifyDataSetChanged()
+        }
+        
+        override fun onCreateViewHolder(parent: android.view.ViewGroup, viewType: Int): ViewHolder {
+            val view = layoutInflater.inflate(R.layout.item_category_summary, parent, false)
+            return ViewHolder(view)
+        }
+        
+        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+            holder.bind(summaries[position])
+        }
+        
+        override fun getItemCount() = summaries.size
+        
+        inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+            private val tvName: TextView = itemView.findViewById(R.id.tvCategorySummaryName)
+            private val tvAmount: TextView = itemView.findViewById(R.id.tvCategorySummaryAmount)
+            
+            fun bind(summary: CategorySummary) {
+                tvName.text = summary.categoryName
+                tvAmount.text = "₹${String.format("%.2f", summary.totalAmount)}"
             }
         }
     }
