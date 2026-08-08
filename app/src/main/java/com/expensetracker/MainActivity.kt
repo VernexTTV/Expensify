@@ -132,7 +132,7 @@ class MainActivity : AppCompatActivity() {
                 bankUpiList = list
             }
             
-            android:util.Log.d("ExpenseTracker", "Step 12: Setup FAB")
+            android.util.Log.d("ExpenseTracker", "Step 12: Setup FAB")
             // Setup FAB
             fabAdd.setOnClickListener {
                 showAddEditDialog(null)
