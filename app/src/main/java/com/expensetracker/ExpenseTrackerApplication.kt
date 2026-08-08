@@ -133,7 +133,7 @@ class ExpenseTrackerApplication : Application() {
                     )
                     
                     defaultCategories.forEach { name ->
-                        categoryDao.insert(Category(name = name))
+                        categoryDao.insertCategory(Category(name = name))
                     }
                     
                     // Add common banks
@@ -153,7 +153,7 @@ class ExpenseTrackerApplication : Application() {
                     )
                     
                     defaultBanks.forEach { name ->
-                        bankUpiDao.insert(BankUpi(name = name, type = BankUpiType.BANK))
+                        bankUpiDao.insertBankUpi(BankUpi(name = name, type = BankUpiType.BANK))
                     }
                     
                     // Add common UPI apps
@@ -170,7 +170,7 @@ class ExpenseTrackerApplication : Application() {
                     )
                     
                     defaultUpiApps.forEach { name ->
-                        bankUpiDao.insert(BankUpi(name = name, type = BankUpiType.UPI))
+                        bankUpiDao.insertBankUpi(BankUpi(name = name, type = BankUpiType.UPI))
                     }
                     
                     // Mark first run as complete
