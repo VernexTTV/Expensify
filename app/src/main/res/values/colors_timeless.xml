@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- TIMELESS DESIGN - Sophisticated & Minimal -->
+    
+    <!-- Primary Palette - Refined Neutrals -->
+    <color name="timeless_charcoal">#1A1A1A</color>
+    <color name="timeless_charcoal_light">#2D2D2D</color>
+    <color name="timeless_charcoal_dark">#0D0D0D</color>
+    
+    <!-- Accent - Subtle Gold (not flashy) -->
+    <color name="timeless_gold">#B8935E</color>
+    <color name="timeless_gold_light">#D4AF76</color>
+    <color name="timeless_gold_subtle">#F5F1E8</color>
+    
+    <!-- Surfaces - Clean & Elevated -->
+    <color name="timeless_white">#FFFFFF</color>
+    <color name="timeless_off_white">#FAFAFA</color>
+    <color name="timeless_light_gray">#F5F5F5</color>
+    <color name="timeless_medium_gray">#E5E5E5</color>
+    
+    <!-- Text Hierarchy -->
+    <color name="timeless_text_primary">#1A1A1A</color>
+    <color name="timeless_text_secondary">#666666</color>
+    <color name="timeless_text_tertiary">#999999</color>
+    <color name="timeless_text_disabled">#CCCCCC</color>
+    
+    <!-- Borders & Dividers - Barely There -->
+    <color name="timeless_border">#ECECEC</color>
+    <color name="timeless_divider">#F5F5F5</color>
+    
+    <!-- Status (Refined, Not Bright) -->
+    <color name="timeless_success">#2D7A4A</color>
+    <color name="timeless_error">#B54646</color>
+    <color name="timeless_income">#2D7A4A</color>
+    <color name="timeless_expense">#1A1A1A</color>
+    
+    <!-- Dark Mode -->
+    <color name="timeless_dark_bg">#0D0D0D</color>
+    <color name="timeless_dark_surface">#1A1A1A</color>
+    <color name="timeless_dark_elevated">#242424</color>
+    <color name="timeless_dark_text">#FFFFFF</color>
+    <color name="timeless_dark_text_secondary">#B3B3B3</color>
+    
+    <!-- Shadows & Overlays -->
+    <color name="timeless_shadow">#1A000000</color>
+    <color name="timeless_overlay_light">#0DFFFFFF</color>
+</resources>

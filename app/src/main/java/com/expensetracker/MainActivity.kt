@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.expensetracker.data.*
 import com.expensetracker.ui.ExpenseAdapter
 import com.expensetracker.ui.ExpenseViewModel
-import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.card.MaterialCardView
 import io.sentry.Sentry
 import java.text.SimpleDateFormat
@@ -25,7 +25,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var emptyView: TextView
     private lateinit var totalAmountView: TextView
-    private lateinit var fabAdd: ExtendedFloatingActionButton
+    private lateinit var fabAdd: FloatingActionButton
     private lateinit var categorySummaryLayout: MaterialCardView
     private lateinit var categorySummaryRecyclerView: RecyclerView
     private lateinit var categorySummaryAdapter: CategorySummaryAdapter

@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/timeless_white">
+
+    <!-- Refined App Bar - No Gradients, Clean Lines -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/timeless_white"
+        android:elevation="0dp"
+        app:elevation="0dp">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/timeless_white"
+            app:title="Expenses"
+            app:titleTextColor="@color/timeless_text_primary"
+            app:titleTextAppearance="@style/Timeless.Toolbar.Title" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Main Content -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <!-- Balance Card - Minimal & Elegant -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingVertical="32dp"
+                android:paddingHorizontal="24dp"
+                android:background="@drawable/timeless_card_bg"
+                android:elevation="2dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Total Balance"
+                    android:textSize="13sp"
+                    android:textColor="@color/timeless_text_secondary"
+                    android:letterSpacing="0.08"
+                    android:fontFamily="sans-serif-medium"
+                    android:textAllCaps="true" />
+
+                <TextView
+                    android:id="@+id/tvTotalAmount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="₹ 0.00"
+                    android:textSize="42sp"
+                    android:textColor="@color/timeless_text_primary"
+                    android:fontFamily="sans-serif-light"
+                    android:letterSpacing="-0.02"
+                    android:layout_marginTop="8dp" />
+
+                <!-- Filter Button - Subtle -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnFilter"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="48dp"
+                    android:text="Filter"
+                    android:textColor="@color/timeless_text_secondary"
+                    android:textSize="14sp"
+                    android:letterSpacing="0.05"
+                    android:fontFamily="sans-serif-medium"
+                    app:icon="@android:drawable/ic_menu_sort_by_size"
+                    app:iconTint="@color/timeless_text_secondary"
+                    app:iconGravity="start"
+                    app:iconPadding="8dp"
+                    app:rippleColor="@color/timeless_gold_subtle"
+                    android:layout_marginTop="16dp" />
+
+            </LinearLayout>
+
+            <!-- Expenses List Header -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Recent Transactions"
+                android:textSize="11sp"
+                android:textColor="@color/timeless_text_tertiary"
+                android:letterSpacing="0.1"
+                android:fontFamily="sans-serif-medium"
+                android:textAllCaps="true"
+                android:layout_marginTop="40dp"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Empty State -->
+            <TextView
+                android:id="@+id/tvEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="No expenses yet"
+                android:textSize="15sp"
+                android:textColor="@color/timeless_text_tertiary"
+                android:fontFamily="sans-serif"
+                android:gravity="center"
+                android:padding="48dp"
+                android:visibility="gone" />
+
+            <!-- Expenses RecyclerView -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipToPadding="false"
+                android:nestedScrollingEnabled="false" />
+
+            <!-- Category Summary Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/layoutCategorySummary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:visibility="gone"
+                app:cardBackgroundColor="@color/timeless_off_white"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Summary by Category"
+                        android:textSize="11sp"
+                        android:textColor="@color/timeless_text_tertiary"
+                        android:letterSpacing="0.1"
+                        android:fontFamily="sans-serif-medium"
+                        android:textAllCaps="true"
+                        android:layout_marginBottom="16dp" />
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvCategorySummary"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:nestedScrollingEnabled="false" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- FAB - Minimal, Refined -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabAdd"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="24dp"
+        android:contentDescription="Add Expense"
+        android:src="@android:drawable/ic_input_add"
+        app:backgroundTint="@color/timeless_charcoal"
+        app:tint="@color/timeless_white"
+        app:elevation="6dp"
+        app:borderWidth="0dp" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
