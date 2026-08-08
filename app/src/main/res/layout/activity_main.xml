@@ -60,6 +60,33 @@
 
         </FrameLayout>
 
+        <!-- Category Summary Section -->
+        <LinearLayout
+            android:id="@+id/layoutCategorySummary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="?attr/colorSecondaryVariant"
+            android:visibility="gone"
+            android:padding="8dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Category-wise Summary"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:padding="8dp"
+                android:textColor="?android:textColorPrimary" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvCategorySummary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false" />
+
+        </LinearLayout>
+
     </LinearLayout>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
