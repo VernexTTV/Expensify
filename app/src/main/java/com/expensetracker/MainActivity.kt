@@ -197,11 +197,9 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun showFilterDialog() {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_filter, null)
-        val dialog = AlertDialog.Builder(this)
-            .setView(dialogView)
-            .setTitle("Filter Expenses")
-            .create()
+        val bottomSheet = com.google.android.material.bottomsheet.BottomSheetDialog(this)
+        val dialogView = layoutInflater.inflate(R.layout.bottom_sheet_filter, null)
+        bottomSheet.setContentView(dialogView)
         
         // Amount range inputs
         val etMinAmount: EditText = dialogView.findViewById(R.id.etMinAmount)
@@ -215,20 +213,17 @@ class MainActivity : AppCompatActivity() {
         val spinnerMonth: android.widget.Spinner = dialogView.findViewById(R.id.spinnerMonth)
         val spinnerYear: android.widget.Spinner = dialogView.findViewById(R.id.spinnerYear)
         
-        // Payment method checkboxes
-        val cbCreditCard: CheckBox = dialogView.findViewById(R.id.cbCreditCard)
-        val cbDebitCard: CheckBox = dialogView.findViewById(R.id.cbDebitCard)
-        val cbUpi: CheckBox = dialogView.findViewById(R.id.cbUpi)
-        val cbCash: CheckBox = dialogView.findViewById(R.id.cbCash)
+        // Payment method chips
+        val cbCreditCard: com.google.android.material.chip.Chip = dialogView.findViewById(R.id.cbCreditCard)
+        val cbDebitCard: com.google.android.material.chip.Chip = dialogView.findViewById(R.id.cbDebitCard)
+        val cbUpi: com.google.android.material.chip.Chip = dialogView.findViewById(R.id.cbUpi)
+        val cbCash: com.google.android.material.chip.Chip = dialogView.findViewById(R.id.cbCash)
         
         // Dynamic checkbox containers
         val layoutCategories: LinearLayout = dialogView.findViewById(R.id.layoutCategories)
-        val layoutBanks: LinearLayout = dialogView.findViewById(R.id.layoutBanks)
-        val layoutUpiApps: LinearLayout = dialogView.findViewById(R.id.layoutUpiApps)
         
         // Action buttons
         val btnClear: Button = dialogView.findViewById(R.id.btnClearFilters)
-        val btnCancel: Button = dialogView.findViewById(R.id.btnCancelFilter)
         val btnApply: Button = dialogView.findViewById(R.id.btnApplyFilter)
         
         // Date tracking
@@ -290,8 +285,6 @@ class MainActivity : AppCompatActivity() {
         
         // Store checkbox references
         val categoryCheckboxes = mutableMapOf<Long, CheckBox>()
-        val bankCheckboxes = mutableMapOf<String, CheckBox>()
-        val upiCheckboxes = mutableMapOf<String, CheckBox>()
         
         // Auto-populate categories from database
         viewModel.allCategories.observe(this) { categoryList ->
@@ -310,53 +303,13 @@ class MainActivity : AppCompatActivity() {
             }
         }
         
-        // Auto-populate banks and UPI apps from database
-        viewModel.allBankUpi.observe(this) { bankUpiList ->
-            // Clear existing views
-            layoutBanks.removeAllViews()
-            layoutUpiApps.removeAllViews()
-            bankCheckboxes.clear()
-            upiCheckboxes.clear()
-            
-            // Separate banks and UPI apps
-            val banks = bankUpiList.filter { it.type == BankUpiType.BANK }
-            val upiApps = bankUpiList.filter { it.type == BankUpiType.UPI }
-            
-            // Add bank checkboxes
-            banks.forEach { bank ->
-                val checkbox = CheckBox(this)
-                checkbox.text = bank.name
-                checkbox.layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                )
-                bankCheckboxes[bank.name] = checkbox
-                layoutBanks.addView(checkbox)
-            }
-            
-            // Add UPI app checkboxes
-            upiApps.forEach { upi ->
-                val checkbox = CheckBox(this)
-                checkbox.text = upi.name
-                checkbox.layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                )
-                upiCheckboxes[upi.name] = checkbox
-                layoutUpiApps.addView(checkbox)
-            }
-        }
-        
         // Clear filters button
         btnClear.setOnClickListener {
             clearFilters()
-            dialog.dismiss()
+            bottomSheet.dismiss()
         }
         
-        // Cancel button
-        btnCancel.setOnClickListener {
-            dialog.dismiss()
-        }
+        // Cancel button - removed as bottom sheet can be dismissed by swiping
         
         // Apply filters button
         btnApply.setOnClickListener {
@@ -400,12 +353,6 @@ class MainActivity : AppCompatActivity() {
             // Get selected categories
             val selectedCategoryIds = categoryCheckboxes.filter { it.value.isChecked }.keys.toList()
             
-            // Get selected banks
-            val selectedBanks = bankCheckboxes.filter { it.value.isChecked }.keys.toList()
-            
-            // Get selected UPI apps
-            val selectedUpiApps = upiCheckboxes.filter { it.value.isChecked }.keys.toList()
-            
             // Apply filters
             applyFilters(
                 minAmount,
@@ -413,15 +360,13 @@ class MainActivity : AppCompatActivity() {
                 finalStartDate,
                 finalEndDate,
                 selectedPaymentModes,
-                selectedCategoryIds,
-                selectedBanks,
-                selectedUpiApps
+                selectedCategoryIds
             )
             
-            dialog.dismiss()
+            bottomSheet.dismiss()
         }
         
-        dialog.show()
+        bottomSheet.show()
     }
     
     private fun applyFilters(
@@ -430,9 +375,7 @@ class MainActivity : AppCompatActivity() {
         startDate: Long?,
         endDate: Long?,
         paymentModes: List<PaymentMode>,
-        categoryIds: List<Long>,
-        banks: List<String>,
-        upiApps: List<String>
+        categoryIds: List<Long>
     ) {
         isFiltering = true
         
