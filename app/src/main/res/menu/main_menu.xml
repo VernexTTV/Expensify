@@ -3,9 +3,15 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     
     <item
-        android:id="@+id/action_filter"
-        android:title="Filter"
-        android:icon="@android:drawable/ic_menu_search"
+        android:id="@+id/action_theme"
+        android:icon="@android:drawable/ic_menu_day"
+        android:title="Toggle Theme"
         app:showAsAction="always" />
     
+    <item
+        android:id="@+id/action_filter"
+        android:icon="@android:drawable/ic_menu_search"
+        android:title="Filter"
+        app:showAsAction="always" />
+        
 </menu>

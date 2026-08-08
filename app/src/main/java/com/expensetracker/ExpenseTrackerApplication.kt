@@ -9,6 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.expensetracker.data.*
+import com.expensetracker.utils.ThemeManager
 
 class ExpenseTrackerApplication : Application() {
     override fun onCreate() {
@@ -63,6 +64,11 @@ class ExpenseTrackerApplication : Application() {
         try {
             super.onCreate()
             Log.d("ExpenseTracker", "=== Application onCreate SUCCESS ===")
+            
+            // Apply saved theme
+            val savedTheme = ThemeManager.getSavedTheme(this)
+            ThemeManager.applyTheme(savedTheme)
+            Log.d("ExpenseTracker", "Theme applied: $savedTheme")
             
             // Initialize default categories and banks/UPI on first run
             initializeDefaultData()
