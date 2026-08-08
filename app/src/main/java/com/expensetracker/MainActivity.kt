@@ -152,24 +152,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
     
-    override fun onCreateOptionsMenu(menu: android.view.Menu?): Boolean {
-        menuInflater.inflate(R.menu.main_menu, menu)
-        return true
-    }
-    
-    override fun onOptionsItemSelected(item: android.view.MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_theme -> {
-                com.expensetracker.utils.ThemeManager.toggleTheme(this)
-                true
-            }
-            R.id.action_filter -> {
-                showFilterDialog()
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
     
     private fun clearFilters() {
         isFiltering = false
