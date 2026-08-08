@@ -511,8 +511,11 @@ class MainActivity : AppCompatActivity() {
         val bankUpiNameEdit: EditText = dialogView.findViewById(R.id.etBankUpiName)
         val btnAddBankUpi: Button = dialogView.findViewById(R.id.btnAddBankUpi)
         val rgType: RadioGroup = dialogView.findViewById(R.id.rgBankUpiType)
+        val rbBank: RadioButton = dialogView.findViewById(R.id.rbBank)
+        val rbUpi: RadioButton = dialogView.findViewById(R.id.rbUpi)
         val rvBankUpi: RecyclerView = dialogView.findViewById(R.id.rvBankUpi)
         val btnClose: Button = dialogView.findViewById(R.id.btnCloseBankUpi)
+        val tvExisting: TextView = dialogView.findViewById(R.id.tvExistingBankUpi)
         
         // Setup RecyclerView for bank/UPI
         val bankUpiAdapter = BankUpiAdapter(
@@ -533,8 +536,29 @@ class MainActivity : AppCompatActivity() {
         rvBankUpi.adapter = bankUpiAdapter
         rvBankUpi.layoutManager = LinearLayoutManager(this)
         
-        viewModel.allBankUpi.observe(this) { list ->
-            bankUpiAdapter.submitList(list)
+        // Function to update the list based on selected type
+        fun updateListForType(type: BankUpiType) {
+            viewModel.allBankUpi.observe(this) { list ->
+                val filteredList = list.filter { it.type == type }
+                bankUpiAdapter.submitList(filteredList)
+            }
+            
+            // Update label
+            tvExisting.text = if (type == BankUpiType.BANK) "Existing Banks" else "Existing UPI Apps"
+            
+            // Update hint
+            bankUpiNameEdit.hint = if (type == BankUpiType.BANK) "Bank name" else "UPI App name"
+        }
+        
+        // Initially show banks
+        updateListForType(BankUpiType.BANK)
+        
+        // Listen for radio button changes
+        rgType.setOnCheckedChangeListener { _, checkedId ->
+            when (checkedId) {
+                R.id.rbBank -> updateListForType(BankUpiType.BANK)
+                R.id.rbUpi -> updateListForType(BankUpiType.UPI)
+            }
         }
         
         btnAddBankUpi.setOnClickListener {
