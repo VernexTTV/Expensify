@@ -1,34 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Premium Brand Colors -->
-    <color name="luxury_purple_primary">#7C3AED</color>
-    <color name="luxury_purple_dark">#5B21B6</color>
-    <color name="luxury_purple_light">#A78BFA</color>
-    <color name="luxury_gold">#F59E0B</color>
-    <color name="luxury_gold_light">#FCD34D</color>
+    <!-- Professional Color Scheme: Navy Blue, Teal Accent, Neutral Grays -->
+    
+    <!-- Primary Colors - Navy Blue -->
+    <color name="navy_primary">#1E3A8A</color>
+    <color name="navy_dark">#1E40AF</color>
+    <color name="navy_light">#3B82F6</color>
+    
+    <!-- Accent Color - Teal -->
+    <color name="teal_accent">#14B8A6</color>
+    <color name="teal_light">#5EEAD4</color>
+    <color name="teal_dark">#0F766E</color>
+    
+    <!-- Neutral Grays -->
+    <color name="gray_50">#F9FAFB</color>
+    <color name="gray_100">#F3F4F6</color>
+    <color name="gray_200">#E5E7EB</color>
+    <color name="gray_300">#D1D5DB</color>
+    <color name="gray_600">#4B5563</color>
+    <color name="gray_700">#374151</color>
+    <color name="gray_800">#1F2937</color>
+    <color name="gray_900">#111827</color>
     
     <!-- Light Theme Colors -->
-    <color name="light_background">#F8FAFC</color>
-    <color name="light_surface">#FFFFFF</color>
-    <color name="light_surface_elevated">#FFFFFF</color>
+    <color name="light_background">#FFFFFF</color>
+    <color name="light_surface">#F9FAFB</color>
     <color name="light_card">#FFFFFF</color>
-    <color name="light_text_primary">#0F172A</color>
-    <color name="light_text_secondary">#64748B</color>
-    <color name="light_divider">#E2E8F0</color>
+    <color name="light_text_primary">#111827</color>
+    <color name="light_text_secondary">#4B5563</color>
+    <color name="light_divider">#E5E7EB</color>
     
     <!-- Dark Theme Colors -->
-    <color name="dark_background">#0F172A</color>
-    <color name="dark_surface">#1E293B</color>
-    <color name="dark_surface_elevated">#334155</color>
-    <color name="dark_card">#1E293B</color>
-    <color name="dark_text_primary">#F1F5F9</color>
-    <color name="dark_text_secondary">#94A3B8</color>
-    <color name="dark_divider">#334155</color>
-    
-    <!-- Gradient Colors -->
-    <color name="gradient_start">#7C3AED</color>
-    <color name="gradient_middle">#A855F7</color>
-    <color name="gradient_end">#EC4899</color>
+    <color name="dark_background">#111827</color>
+    <color name="dark_surface">#1F2937</color>
+    <color name="dark_card">#374151</color>
+    <color name="dark_text_primary">#F9FAFB</color>
+    <color name="dark_text_secondary">#D1D5DB</color>
+    <color name="dark_divider">#374151</color>
     
     <!-- Semantic Colors -->
     <color name="success">#10B981</color>
@@ -36,17 +44,7 @@
     <color name="error">#EF4444</color>
     <color name="info">#3B82F6</color>
     
-    <!-- Category Colors (Premium) -->
-    <color name="category_food">#F59E0B</color>
-    <color name="category_transport">#3B82F6</color>
-    <color name="category_shopping">#EC4899</color>
-    <color name="category_entertainment">#8B5CF6</color>
-    <color name="category_health">#10B981</color>
-    <color name="category_utilities">#6366F1</color>
-    <color name="category_education">#14B8A6</color>
-    <color name="category_other">#64748B</color>
-    
-    <!-- Legacy (keep for compatibility) -->
+    <!-- Legacy colors (for compatibility) -->
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>
     <color name="purple_700">#FF3700B3</color>
@@ -54,9 +52,60 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="primary">#7C3AED</color>
-    <color name="primary_dark">#5B21B6</color>
-    <color name="accent">#F59E0B</color>
+    <color name="primary">#1E3A8A</color>
+    <color name="primary_dark">#1E40AF</color>
+    <color name="accent">#14B8A6</color>
+    
+    <!-- Premium Brand Colors (legacy, mapped to new scheme) -->
+    <color name="luxury_purple_primary">#1E3A8A</color>
+    <color name="luxury_purple_dark">#1E40AF</color>
+    <color name="luxury_purple_light">#3B82F6</color>
+    <color name="luxury_gold">#14B8A6</color>
+    <color name="luxury_gold_light">#5EEAD4</color>
+    
+    <!-- Gradient Colors -->
+    <color name="gradient_start">#1E3A8A</color>
+    <color name="gradient_middle">#3B82F6</color>
+    <color name="gradient_end">#14B8A6</color>
+    
+    <!-- Category Colors (Professional) -->
+    <color name="category_food">#F59E0B</color>
+    <color name="category_transport">#3B82F6</color>
+    <color name="category_shopping">#14B8A6</color>
+    <color name="category_entertainment">#8B5CF6</color>
+    <color name="category_health">#10B981</color>
+    <color name="category_utilities">#1E40AF</color>
+    <color name="category_education">#14B8A6</color>
+    <color name="category_other">#4B5563</color>
+    
+    <!-- Timeless colors (mapped to new scheme for compatibility) -->
+    <color name="timeless_charcoal">#111827</color>
+    <color name="timeless_charcoal_light">#1F2937</color>
+    <color name="timeless_charcoal_dark">#000000</color>
+    <color name="timeless_gold">#14B8A6</color>
+    <color name="timeless_gold_light">#5EEAD4</color>
+    <color name="timeless_gold_subtle">#F0FDFA</color>
+    <color name="timeless_white">#FFFFFF</color>
+    <color name="timeless_off_white">#F9FAFB</color>
+    <color name="timeless_light_gray">#F3F4F6</color>
+    <color name="timeless_medium_gray">#E5E7EB</color>
+    <color name="timeless_text_primary">#111827</color>
+    <color name="timeless_text_secondary">#4B5563</color>
+    <color name="timeless_text_tertiary">#6B7280</color>
+    <color name="timeless_text_disabled">#D1D5DB</color>
+    <color name="timeless_border">#E5E7EB</color>
+    <color name="timeless_divider">#F3F4F6</color>
+    <color name="timeless_success">#10B981</color>
+    <color name="timeless_error">#EF4444</color>
+    <color name="timeless_income">#10B981</color>
+    <color name="timeless_expense">#111827</color>
+    <color name="timeless_dark_bg">#111827</color>
+    <color name="timeless_dark_surface">#1F2937</color>
+    <color name="timeless_dark_elevated">#374151</color>
+    <color name="timeless_dark_text">#F9FAFB</color>
+    <color name="timeless_dark_text_secondary">#D1D5DB</color>
+    <color name="timeless_shadow">#1A000000</color>
+    <color name="timeless_overlay_light">#0DFFFFFF</color>
     
     <!-- Transparency -->
     <color name="black_overlay_light">#33000000</color>

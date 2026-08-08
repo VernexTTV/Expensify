@@ -132,10 +132,17 @@ class MainActivity : AppCompatActivity() {
                 bankUpiList = list
             }
             
-            android.util.Log.d("ExpenseTracker", "Step 12: Setup FAB")
+            android:util.Log.d("ExpenseTracker", "Step 12: Setup FAB")
             // Setup FAB
             fabAdd.setOnClickListener {
                 showAddEditDialog(null)
+            }
+            
+            android.util.Log.d("ExpenseTracker", "Step 13: Setup Filter Button")
+            // Setup Filter Button (if exists in layout)
+            val btnFilter: android.widget.Button? = findViewById(R.id.btnFilter)
+            btnFilter?.setOnClickListener {
+                showFilterDialog()
             }
             
             android.util.Log.d("ExpenseTracker", "=== MainActivity onCreate SUCCESS ===")

@@ -107,6 +107,16 @@
             android:fontFamily="sans-serif"
             android:layout_marginStart="12dp" />
 
+        <TextView
+            android:id="@+id/tvDetails"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="12sp"
+            android:textColor="@color/timeless_text_tertiary"
+            android:fontFamily="sans-serif"
+            android:layout_marginStart="8dp" />
+
     </LinearLayout>
 
     <!-- Subtle Divider -->

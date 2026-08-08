@@ -3,24 +3,24 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/timeless_white">
+    android:background="@color/light_background">
 
-    <!-- Refined App Bar - No Gradients, Clean Lines -->
+    <!-- Professional App Bar - Navy Blue -->
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/timeless_white"
-        android:elevation="0dp"
-        app:elevation="0dp">
+        android:background="@color/navy_primary"
+        android:elevation="4dp"
+        app:elevation="4dp">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/timeless_white"
+            android:background="@color/navy_primary"
             app:title="Expenses"
-            app:titleTextColor="@color/timeless_text_primary" />
+            app:titleTextColor="@color/white" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -50,7 +50,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Total Balance"
+                    android:text="Total Expense"
                     android:textSize="13sp"
                     android:textColor="@color/timeless_text_secondary"
                     android:letterSpacing="0.08"
@@ -75,15 +75,15 @@
                     android:layout_width="wrap_content"
                     android:layout_height="48dp"
                     android:text="Filter"
-                    android:textColor="@color/timeless_text_secondary"
+                    android:textColor="@color/teal_accent"
                     android:textSize="14sp"
                     android:letterSpacing="0.05"
                     android:fontFamily="sans-serif-medium"
                     app:icon="@android:drawable/ic_menu_sort_by_size"
-                    app:iconTint="@color/timeless_text_secondary"
+                    app:iconTint="@color/teal_accent"
                     app:iconGravity="start"
                     app:iconPadding="8dp"
-                    app:rippleColor="@color/timeless_gold_subtle"
+                    app:rippleColor="@color/teal_light"
                     android:layout_marginTop="16dp" />
 
             </LinearLayout>
@@ -174,8 +174,8 @@
         android:layout_margin="24dp"
         android:contentDescription="Add Expense"
         android:src="@android:drawable/ic_input_add"
-        app:backgroundTint="@color/timeless_charcoal"
-        app:tint="@color/timeless_white"
+        app:backgroundTint="@color/teal_accent"
+        app:tint="@color/white"
         app:elevation="6dp"
         app:borderWidth="0dp" />
 
