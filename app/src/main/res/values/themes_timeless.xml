@@ -18,13 +18,6 @@
         <!-- Navigation Bar -->
         <item name="android:navigationBarColor">@color/timeless_white</item>
         <item name="android:windowLightNavigationBar">true</item>
-        
-        <!-- Typography -->
-        <item name="textAppearanceHeadline1">@style/Timeless.Text.Headline1</item>
-        <item name="textAppearanceHeadline2">@style/Timeless.Text.Headline2</item>
-        <item name="textAppearanceBody1">@style/Timeless.Text.Body1</item>
-        <item name="textAppearanceBody2">@style/Timeless.Text.Body2</item>
-        <item name="textAppearanceCaption">@style/Timeless.Text.Caption</item>
     </style>
 
     <!-- Typography Styles - Refined Hierarchy -->

@@ -20,8 +20,7 @@
             android:layout_height="?attr/actionBarSize"
             android:background="@color/timeless_white"
             app:title="Expenses"
-            app:titleTextColor="@color/timeless_text_primary"
-            app:titleTextAppearance="@style/Timeless.Toolbar.Title" />
+            app:titleTextColor="@color/timeless_text_primary" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
