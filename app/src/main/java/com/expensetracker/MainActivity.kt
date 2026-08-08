@@ -141,20 +141,6 @@ class MainActivity : AppCompatActivity() {
                 showFilterDialog()
                 true
             }
-            R.id.action_test_crash -> {
-                // Test crash for Sentry
-                Toast.makeText(this, "Triggering test crash in 2 seconds...", Toast.LENGTH_SHORT).show()
-                android.os.Handler(mainLooper).postDelayed({
-                    throw RuntimeException("Test Crash for Sentry - Intentional!")
-                }, 2000)
-                true
-            }
-            R.id.action_test_message -> {
-                // Test message for Sentry
-                Sentry.captureMessage("Test message from MainActivity - User clicked test button")
-                Toast.makeText(this, "Test message sent to Sentry! Check your dashboard.", Toast.LENGTH_LONG).show()
-                true
-            }
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -401,18 +387,29 @@ class MainActivity : AppCompatActivity() {
         }
         
         // Setup category spinner
-        val categoryNames = mutableListOf("None")
-        categoryNames.addAll(categories.map { it.name })
-        val categoryAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, categoryNames)
-        categoryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        categorySpinner.adapter = categoryAdapter
-        
-        // Pre-select category if editing
-        if (expense?.categoryId != null) {
-            val categoryIndex = categories.indexOfFirst { it.id == expense.categoryId }
-            if (categoryIndex >= 0) {
-                categorySpinner.setSelection(categoryIndex + 1) // +1 because "None" is at index 0
+        fun refreshCategorySpinner() {
+            val categoryNames = mutableListOf("None")
+            categoryNames.addAll(categories.map { it.name })
+            val categoryAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, categoryNames)
+            categoryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            categorySpinner.adapter = categoryAdapter
+            
+            // Pre-select category if editing
+            if (expense?.categoryId != null) {
+                val categoryIndex = categories.indexOfFirst { it.id == expense.categoryId }
+                if (categoryIndex >= 0) {
+                    categorySpinner.setSelection(categoryIndex + 1) // +1 because "None" is at index 0
+                }
             }
+        }
+        
+        // Initial setup
+        refreshCategorySpinner()
+        
+        // Observe category changes to refresh spinner in real-time
+        viewModel.allCategories.observe(this) { categoryList ->
+            categories = categoryList
+            refreshCategorySpinner()
         }
         
         btnManageCategories.setOnClickListener {
@@ -472,6 +469,14 @@ class MainActivity : AppCompatActivity() {
                     bankUpiLayout.visibility = View.GONE
                 }
             }
+        }
+        
+        // Observe bank/UPI changes to refresh spinner in real-time
+        viewModel.allBankUpi.observe(this) { list ->
+            bankUpiList = list
+            // Refresh current spinner based on selected payment mode
+            val currentPaymentMode = PaymentMode.values()[paymentModeSpinner.selectedItemPosition]
+            updateBankUpiSpinner(currentPaymentMode)
         }
         
         paymentModeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
