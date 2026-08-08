@@ -179,8 +179,250 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun showFilterDialog() {
-        // SIMPLIFIED - Using single-select spinners instead of multi-select checkboxes
-        Toast.makeText(this, "Simple filter dialog - to be implemented", Toast.LENGTH_SHORT).show()
+        val dialogView = layoutInflater.inflate(R.layout.dialog_filter, null)
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setTitle("Filter Expenses")
+            .create()
+        
+        // Amount range inputs
+        val etMinAmount: EditText = dialogView.findViewById(R.id.etMinAmount)
+        val etMaxAmount: EditText = dialogView.findViewById(R.id.etMaxAmount)
+        
+        // Date range buttons
+        val btnStartDate: Button = dialogView.findViewById(R.id.btnSelectStartDate)
+        val btnEndDate: Button = dialogView.findViewById(R.id.btnSelectEndDate)
+        
+        // Payment method checkboxes
+        val cbCreditCard: CheckBox = dialogView.findViewById(R.id.cbCreditCard)
+        val cbDebitCard: CheckBox = dialogView.findViewById(R.id.cbDebitCard)
+        val cbUpi: CheckBox = dialogView.findViewById(R.id.cbUpi)
+        val cbCash: CheckBox = dialogView.findViewById(R.id.cbCash)
+        
+        // Dynamic checkbox containers
+        val layoutCategories: LinearLayout = dialogView.findViewById(R.id.layoutCategories)
+        val layoutBanks: LinearLayout = dialogView.findViewById(R.id.layoutBanks)
+        val layoutUpiApps: LinearLayout = dialogView.findViewById(R.id.layoutUpiApps)
+        
+        // Action buttons
+        val btnClear: Button = dialogView.findViewById(R.id.btnClearFilters)
+        val btnCancel: Button = dialogView.findViewById(R.id.btnCancelFilter)
+        val btnApply: Button = dialogView.findViewById(R.id.btnApplyFilter)
+        
+        // Date tracking
+        var selectedStartDate: Long? = null
+        var selectedEndDate: Long? = null
+        val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+        
+        // Setup date pickers
+        btnStartDate.setOnClickListener {
+            val calendar = Calendar.getInstance()
+            DatePickerDialog(
+                this,
+                { _, year, month, day ->
+                    calendar.set(year, month, day, 0, 0, 0)
+                    selectedStartDate = calendar.timeInMillis
+                    btnStartDate.text = dateFormat.format(Date(selectedStartDate!!))
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+            ).show()
+        }
+        
+        btnEndDate.setOnClickListener {
+            val calendar = Calendar.getInstance()
+            DatePickerDialog(
+                this,
+                { _, year, month, day ->
+                    calendar.set(year, month, day, 23, 59, 59)
+                    selectedEndDate = calendar.timeInMillis
+                    btnEndDate.text = dateFormat.format(Date(selectedEndDate!!))
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+            ).show()
+        }
+        
+        // Store checkbox references
+        val categoryCheckboxes = mutableMapOf<Long, CheckBox>()
+        val bankCheckboxes = mutableMapOf<String, CheckBox>()
+        val upiCheckboxes = mutableMapOf<String, CheckBox>()
+        
+        // Auto-populate categories from database
+        viewModel.allCategories.observe(this) { categoryList ->
+            layoutCategories.removeAllViews()
+            categoryCheckboxes.clear()
+            
+            categoryList.forEach { category ->
+                val checkbox = CheckBox(this)
+                checkbox.text = category.name
+                checkbox.layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                categoryCheckboxes[category.id] = checkbox
+                layoutCategories.addView(checkbox)
+            }
+        }
+        
+        // Auto-populate banks and UPI apps from database
+        viewModel.allBankUpi.observe(this) { bankUpiList ->
+            // Clear existing views
+            layoutBanks.removeAllViews()
+            layoutUpiApps.removeAllViews()
+            bankCheckboxes.clear()
+            upiCheckboxes.clear()
+            
+            // Separate banks and UPI apps
+            val banks = bankUpiList.filter { it.type == BankUpiType.BANK }
+            val upiApps = bankUpiList.filter { it.type == BankUpiType.UPI }
+            
+            // Add bank checkboxes
+            banks.forEach { bank ->
+                val checkbox = CheckBox(this)
+                checkbox.text = bank.name
+                checkbox.layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                bankCheckboxes[bank.name] = checkbox
+                layoutBanks.addView(checkbox)
+            }
+            
+            // Add UPI app checkboxes
+            upiApps.forEach { upi ->
+                val checkbox = CheckBox(this)
+                checkbox.text = upi.name
+                checkbox.layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                upiCheckboxes[upi.name] = checkbox
+                layoutUpiApps.addView(checkbox)
+            }
+        }
+        
+        // Clear filters button
+        btnClear.setOnClickListener {
+            clearFilters()
+            dialog.dismiss()
+        }
+        
+        // Cancel button
+        btnCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+        
+        // Apply filters button
+        btnApply.setOnClickListener {
+            // Get amount range
+            val minAmount = etMinAmount.text.toString().toDoubleOrNull()
+            val maxAmount = etMaxAmount.text.toString().toDoubleOrNull()
+            
+            // Get selected payment modes
+            val selectedPaymentModes = mutableListOf<PaymentMode>()
+            if (cbCreditCard.isChecked) selectedPaymentModes.add(PaymentMode.CREDIT_CARD)
+            if (cbDebitCard.isChecked) selectedPaymentModes.add(PaymentMode.DEBIT_CARD)
+            if (cbUpi.isChecked) selectedPaymentModes.add(PaymentMode.UPI)
+            if (cbCash.isChecked) selectedPaymentModes.add(PaymentMode.CASH)
+            
+            // Get selected categories
+            val selectedCategoryIds = categoryCheckboxes.filter { it.value.isChecked }.keys.toList()
+            
+            // Get selected banks
+            val selectedBanks = bankCheckboxes.filter { it.value.isChecked }.keys.toList()
+            
+            // Get selected UPI apps
+            val selectedUpiApps = upiCheckboxes.filter { it.value.isChecked }.keys.toList()
+            
+            // Apply filters
+            applyFilters(
+                minAmount,
+                maxAmount,
+                selectedStartDate,
+                selectedEndDate,
+                selectedPaymentModes,
+                selectedCategoryIds,
+                selectedBanks,
+                selectedUpiApps
+            )
+            
+            dialog.dismiss()
+        }
+        
+        dialog.show()
+    }
+    
+    private fun applyFilters(
+        minAmount: Double?,
+        maxAmount: Double?,
+        startDate: Long?,
+        endDate: Long?,
+        paymentModes: List<PaymentMode>,
+        categoryIds: List<Long>,
+        banks: List<String>,
+        upiApps: List<String>
+    ) {
+        isFiltering = true
+        
+        // Get all expenses and filter them
+        viewModel.allExpenses.observe(this) { allExpenses ->
+            var filteredExpenses = allExpenses
+            
+            // Filter by amount range
+            if (minAmount != null) {
+                filteredExpenses = filteredExpenses.filter { it.amount >= minAmount }
+            }
+            if (maxAmount != null) {
+                filteredExpenses = filteredExpenses.filter { it.amount <= maxAmount }
+            }
+            
+            // Filter by date range
+            if (startDate != null) {
+                filteredExpenses = filteredExpenses.filter { it.date >= startDate }
+            }
+            if (endDate != null) {
+                filteredExpenses = filteredExpenses.filter { it.date <= endDate }
+            }
+            
+            // Filter by payment modes
+            if (paymentModes.isNotEmpty()) {
+                filteredExpenses = filteredExpenses.filter { it.paymentMode in paymentModes }
+            }
+            
+            // Filter by categories
+            if (categoryIds.isNotEmpty()) {
+                filteredExpenses = filteredExpenses.filter { it.categoryId in categoryIds }
+            }
+            
+            // Filter by banks
+            if (banks.isNotEmpty()) {
+                filteredExpenses = filteredExpenses.filter { it.bankName in banks }
+            }
+            
+            // Filter by UPI apps
+            if (upiApps.isNotEmpty()) {
+                filteredExpenses = filteredExpenses.filter { it.upiApp in upiApps }
+            }
+            
+            // Update UI
+            if (filteredExpenses.isEmpty()) {
+                recyclerView.visibility = View.GONE
+                emptyView.visibility = View.VISIBLE
+            } else {
+                recyclerView.visibility = View.VISIBLE
+                emptyView.visibility = View.GONE
+                adapter.submitList(filteredExpenses)
+            }
+            
+            // Update total
+            val total = filteredExpenses.sumOf { it.amount }
+            totalAmountView.text = "Total: ₹${String.format("%.2f", total)}"
+        }
+        
+        Toast.makeText(this, "Filters applied", Toast.LENGTH_SHORT).show()
     }
     
     private fun showManageCategoriesDialog() {
