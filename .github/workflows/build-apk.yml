@@ -12,7 +12,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
     
     - name: Set up JDK 17
       uses: actions/setup-java@v5
@@ -30,7 +30,7 @@ jobs:
       run: ls -la app/build/outputs/apk/debug/
     
     - name: Upload APK
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       if: success()
       with:
         name: expense-tracker-apk
