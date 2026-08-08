@@ -57,7 +57,7 @@ class MainActivity : AppCompatActivity() {
             setSupportActionBar(toolbar)
             supportActionBar?.title = "Expense Tracker"
             
-            android:util.Log.d("ExpenseTracker", "Step 4: Initialize views")
+            android.util.Log.d("ExpenseTracker", "Step 4: Initialize views")
             // Initialize views
             recyclerView = findViewById(R.id.recyclerView)
             emptyView = findViewById(R.id.tvEmpty)
