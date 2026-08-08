@@ -47,6 +47,30 @@
         <item name="android:paddingBottom">14dp</item>
     </style>
     
+    <!-- Premium Typography Styles -->
+    <style name="TextAppearance.Premium.Headline" parent="TextAppearance.Material3.HeadlineLarge">
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textSize">32sp</item>
+        <item name="android:letterSpacing">-0.01</item>
+    </style>
+    
+    <style name="TextAppearance.Premium.Title" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textSize">20sp</item>
+    </style>
+    
+    <style name="TextAppearance.Premium.Body" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:lineSpacingMultiplier">1.3</item>
+    </style>
+    
+    <style name="TextAppearance.Premium.Caption" parent="TextAppearance.Material3.BodySmall">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:alpha">0.7</item>
+    </style>
+    
     <!-- Rounded Corner Shape -->
     <style name="ShapeAppearance.Material3.Corner.Medium" parent="">
         <item name="cornerFamily">rounded</item>
