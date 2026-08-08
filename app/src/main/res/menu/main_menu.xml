@@ -8,4 +8,14 @@
         android:icon="@android:drawable/ic_menu_search"
         app:showAsAction="always" />
     
+    <item
+        android:id="@+id/action_test_crash"
+        android:title="Test Crash (Sentry)"
+        app:showAsAction="never" />
+    
+    <item
+        android:id="@+id/action_test_message"
+        android:title="Test Message (Sentry)"
+        app:showAsAction="never" />
+    
 </menu>

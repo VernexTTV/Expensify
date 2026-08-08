@@ -13,6 +13,7 @@ import com.expensetracker.data.*
 import com.expensetracker.ui.ExpenseAdapter
 import com.expensetracker.ui.ExpenseViewModel
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import io.sentry.Sentry
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -138,6 +139,20 @@ class MainActivity : AppCompatActivity() {
         return when (item.itemId) {
             R.id.action_filter -> {
                 showFilterDialog()
+                true
+            }
+            R.id.action_test_crash -> {
+                // Test crash for Sentry
+                Toast.makeText(this, "Triggering test crash in 2 seconds...", Toast.LENGTH_SHORT).show()
+                android.os.Handler(mainLooper).postDelayed({
+                    throw RuntimeException("Test Crash for Sentry - Intentional!")
+                }, 2000)
+                true
+            }
+            R.id.action_test_message -> {
+                // Test message for Sentry
+                Sentry.captureMessage("Test message from MainActivity - User clicked test button")
+                Toast.makeText(this, "Test message sent to Sentry! Check your dashboard.", Toast.LENGTH_LONG).show()
                 true
             }
             else -> super.onOptionsItemSelected(item)
