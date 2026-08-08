@@ -50,21 +50,59 @@ abstract class ExpenseDatabase : RoomDatabase() {
         fun getDatabase(context: Context): ExpenseDatabase {
             android.util.Log.d("ExpenseTracker", "=== Database getDatabase START ===")
             return INSTANCE ?: synchronized(this) {
+                val existingInstance = INSTANCE
+                if (existingInstance != null) {
+                    return existingInstance
+                }
+                
                 try {
                     android.util.Log.d("ExpenseTracker", "Creating database instance...")
+                    
+                    // Try to delete old database files if they exist and are corrupted
+                    try {
+                        val oldDbFile = context.getDatabasePath("expense_database")
+                        if (oldDbFile.exists()) {
+                            android.util.Log.d("ExpenseTracker", "Deleting old database file...")
+                            context.deleteDatabase("expense_database")
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.w("ExpenseTracker", "Could not delete old database", e)
+                    }
+                    
                     val instance = Room.databaseBuilder(
                         context.applicationContext,
                         ExpenseDatabase::class.java,
-                        "expense_database_v2"  // Changed name to force new database
+                        "expense_database_v2"
                     )
-                    .fallbackToDestructiveMigration()  // Recreate if any issues
+                    .fallbackToDestructiveMigration()
                     .build()
+                    
                     INSTANCE = instance
                     android.util.Log.d("ExpenseTracker", "=== Database getDatabase SUCCESS ===")
                     instance
                 } catch (e: Exception) {
                     android.util.Log.e("ExpenseTracker", "=== Database getDatabase FAILED ===", e)
-                    throw e
+                    
+                    // Try one more time with a completely fresh database
+                    try {
+                        android.util.Log.d("ExpenseTracker", "Attempting recovery with fresh database...")
+                        context.deleteDatabase("expense_database_v2")
+                        
+                        val instance = Room.databaseBuilder(
+                            context.applicationContext,
+                            ExpenseDatabase::class.java,
+                            "expense_database_v2"
+                        )
+                        .fallbackToDestructiveMigration()
+                        .build()
+                        
+                        INSTANCE = instance
+                        android.util.Log.d("ExpenseTracker", "=== Database recovery SUCCESS ===")
+                        instance
+                    } catch (recoveryError: Exception) {
+                        android.util.Log.e("ExpenseTracker", "=== Database recovery FAILED ===", recoveryError)
+                        throw recoveryError
+                    }
                 }
             }
         }

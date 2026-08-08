@@ -8,10 +8,7 @@ import io.sentry.protocol.User
 
 class ExpenseTrackerApplication : Application() {
     override fun onCreate() {
-        super.onCreate()
-        
-        // Initialize Sentry FIRST - before anything else
-        // This ensures we catch ALL crashes, even instant ones
+        // Initialize Sentry FIRST - before super.onCreate()
         try {
             SentryAndroid.init(this) { options ->
                 options.dsn = "https://ed21a268279cdf3e8271af859ee531c3@o4511715743105024.ingest.us.sentry.io/4511875213361152"
@@ -58,6 +55,20 @@ class ExpenseTrackerApplication : Application() {
             // Don't crash the app if Sentry fails
         }
         
-        Log.d("ExpenseTracker", "=== Application onCreate SUCCESS ===")
+        // Now call super.onCreate() with error handling
+        try {
+            super.onCreate()
+            Log.d("ExpenseTracker", "=== Application onCreate SUCCESS ===")
+        } catch (e: Exception) {
+            Log.e("ExpenseTracker", "=== Application onCreate FAILED ===", e)
+            // Report to Sentry if it's initialized
+            try {
+                Sentry.captureException(e)
+            } catch (sentryError: Exception) {
+                Log.e("ExpenseTracker", "Could not report to Sentry", sentryError)
+            }
+            // Re-throw to let the system handle it
+            throw e
+        }
     }
 }
