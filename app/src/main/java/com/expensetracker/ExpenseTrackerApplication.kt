@@ -11,8 +11,7 @@ class ExpenseTrackerApplication : Application() {
         SentryAndroid.init(this) { options ->
             options.dsn = "https://ed21a268279cdf3e8271af859ee531c3@o4511715743105024.ingest.us.sentry.io/4511875213361152"
             options.isDebug = true // Enable debug logs to verify it's working
-            options.enableAutoSessionTracking = true
-            options.sessionTrackingIntervalMillis = 5000
+            // Session tracking is enabled by default in Sentry Android SDK
         }
         
         Log.d("ExpenseTracker", "=== Sentry initialized ===")
