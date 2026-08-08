@@ -13,6 +13,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ExpenseTracker"
         tools:targetApi="31">
+        
+        <!-- Sentry DSN for crash reporting -->
+        <meta-data
+            android:name="io.sentry.dsn"
+            android:value="https://ed21a268279cdf3e8271af859ee531c3@o4511715743105024.ingest.us.sentry.io/4511875213361152" />
+        
         <activity
             android:name=".MainActivity"
             android:exported="true">
