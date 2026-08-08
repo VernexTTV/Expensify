@@ -1,10 +1,19 @@
 package com.expensetracker.data
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.Date
 
-@Entity(tableName = "expenses")
+@Entity(
+    tableName = "expenses",
+    indices = [
+        Index(value = ["date"]),
+        Index(value = ["categoryId"]),
+        Index(value = ["paymentMode"]),
+        Index(value = ["date", "categoryId"])
+    ]
+)
 data class Expense(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,

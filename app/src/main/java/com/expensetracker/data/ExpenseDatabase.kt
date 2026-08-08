@@ -8,7 +8,7 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [Expense::class, Category::class, BankUpi::class], version = 2, exportSchema = false)
+@Database(entities = [Expense::class, Category::class, BankUpi::class], version = 3, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class ExpenseDatabase : RoomDatabase() {
     
@@ -47,6 +47,17 @@ abstract class ExpenseDatabase : RoomDatabase() {
             }
         }
         
+        // Migration from version 2 to version 3
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Add indexes for better query performance with large datasets
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_expenses_date` ON `expenses` (`date`)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_expenses_categoryId` ON `expenses` (`categoryId`)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_expenses_paymentMode` ON `expenses` (`paymentMode`)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_expenses_date_categoryId` ON `expenses` (`date`, `categoryId`)")
+            }
+        }
+        
         fun getDatabase(context: Context): ExpenseDatabase {
             android.util.Log.d("ExpenseTracker", "=== Database getDatabase START ===")
             return INSTANCE ?: synchronized(this) {
@@ -74,6 +85,7 @@ abstract class ExpenseDatabase : RoomDatabase() {
                         ExpenseDatabase::class.java,
                         "expense_database_v2"
                     )
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                     .fallbackToDestructiveMigration()
                     .build()
                     
@@ -93,6 +105,7 @@ abstract class ExpenseDatabase : RoomDatabase() {
                             ExpenseDatabase::class.java,
                             "expense_database_v2"
                         )
+                        .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                         .fallbackToDestructiveMigration()
                         .build()
                         

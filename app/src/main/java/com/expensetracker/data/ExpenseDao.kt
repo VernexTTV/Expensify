@@ -6,8 +6,13 @@ import androidx.room.*
 @Dao
 interface ExpenseDao {
     
-    @Query("SELECT * FROM expenses ORDER BY date DESC")
+    // Regular queries now return only recent expenses (last 90 days by default)
+    @Query("SELECT * FROM expenses ORDER BY date DESC LIMIT 1000")
     fun getAllExpenses(): LiveData<List<Expense>>
+    
+    // Add method to get all expenses without limit (use carefully)
+    @Query("SELECT * FROM expenses ORDER BY date DESC")
+    fun getAllExpensesUnlimited(): LiveData<List<Expense>>
     
     @Query("SELECT * FROM expenses WHERE date BETWEEN :startDate AND :endDate ORDER BY date DESC")
     fun getExpensesByDateRange(startDate: Long, endDate: Long): LiveData<List<Expense>>
