@@ -20,49 +20,22 @@
         <item name="android:windowLightNavigationBar">true</item>
     </style>
 
-    <!-- Typography Styles - Refined Hierarchy -->
-    <style name="Timeless.Text.Headline1">
-        <item name="android:textSize">42sp</item>
-        <item name="android:textColor">@color/timeless_text_primary</item>
-        <item name="android:fontFamily">sans-serif-light</item>
-        <item name="android:letterSpacing">-0.02</item>
-    </style>
-
-    <style name="Timeless.Text.Headline2">
-        <item name="android:textSize">24sp</item>
-        <item name="android:textColor">@color/timeless_text_primary</item>
-        <item name="android:fontFamily">sans-serif-light</item>
-        <item name="android:letterSpacing">-0.01</item>
-    </style>
-
-    <style name="Timeless.Text.Body1">
-        <item name="android:textSize">15sp</item>
+    <!-- Text Styles -->
+    <style name="Timeless.Text" parent="TextAppearance.Material3.BodyLarge">
         <item name="android:textColor">@color/timeless_text_primary</item>
         <item name="android:fontFamily">sans-serif</item>
-        <item name="android:letterSpacing">0</item>
     </style>
 
-    <style name="Timeless.Text.Body2">
-        <item name="android:textSize">13sp</item>
-        <item name="android:textColor">@color/timeless_text_secondary</item>
-        <item name="android:fontFamily">sans-serif</item>
-        <item name="android:letterSpacing">0</item>
+    <!-- Toolbar Styles -->
+    <style name="Timeless.Toolbar" parent="Widget.Material3.Toolbar">
+        <item name="android:background">@color/timeless_white</item>
     </style>
 
-    <style name="Timeless.Text.Caption">
-        <item name="android:textSize">11sp</item>
-        <item name="android:textColor">@color/timeless_text_tertiary</item>
-        <item name="android:fontFamily">sans-serif-medium</item>
-        <item name="android:letterSpacing">0.1</item>
-        <item name="android:textAllCaps">true</item>
-    </style>
-
-    <!-- Toolbar Title -->
-    <style name="Timeless.Toolbar.Title">
+    <style name="Timeless.Toolbar.Title" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:textColor">@color/timeless_text_primary</item>
         <item name="android:textSize">20sp</item>
-        <item name="android:textColor">@color/timeless_text_primary</item>
         <item name="android:fontFamily">sans-serif-medium</item>
-        <item name="android:letterSpacing">-0.01</item>
+        <item name="android:letterSpacing">0.01</item>
     </style>
 
 </resources>
