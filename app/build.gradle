@@ -2,6 +2,7 @@ plugins {
     id 'com.android.application'
     id 'kotlin-android'
     id 'kotlin-kapt'
+    id 'io.sentry.android.gradle' version '4.1.1'
 }
 
 android {
@@ -59,4 +60,7 @@ dependencies {
     
     // RecyclerView
     implementation 'androidx.recyclerview:recyclerview:1.3.1'
+    
+    // Sentry for crash reporting
+    implementation 'io.sentry:sentry-android:7.1.0'
 }
