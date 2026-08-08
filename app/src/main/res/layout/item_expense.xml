@@ -66,7 +66,7 @@
                 android:id="@+id/tvCategory"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Food & Dining"
+                android:text="Food &amp; Dining"
                 android:textSize="12sp"
                 android:layout_marginTop="8dp"
                 app:chipBackgroundColor="@color/luxury_purple_light"
