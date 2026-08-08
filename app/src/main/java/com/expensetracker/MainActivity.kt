@@ -409,16 +409,6 @@ class MainActivity : AppCompatActivity() {
                 filteredExpenses = filteredExpenses.filter { it.categoryId in categoryIds }
             }
             
-            // Filter by banks
-            if (banks.isNotEmpty()) {
-                filteredExpenses = filteredExpenses.filter { it.bankName in banks }
-            }
-            
-            // Filter by UPI apps
-            if (upiApps.isNotEmpty()) {
-                filteredExpenses = filteredExpenses.filter { it.upiApp in upiApps }
-            }
-            
             // Update UI
             if (filteredExpenses.isEmpty()) {
                 recyclerView.visibility = View.GONE
