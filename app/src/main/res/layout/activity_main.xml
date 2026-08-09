@@ -55,7 +55,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Total Expense"
+                    android:text="Total Expenses"
                     android:textSize="13sp"
                     android:textColor="@color/timeless_text_secondary"
                     android:letterSpacing="0.08"
@@ -95,9 +95,10 @@
 
             <!-- Expenses List Header -->
             <TextView
+                android:id="@+id/tvExpensesHeader"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Recent Transactions"
+                android:text="All Expenses"
                 android:textSize="11sp"
                 android:textColor="@color/timeless_text_tertiary"
                 android:letterSpacing="0.1"

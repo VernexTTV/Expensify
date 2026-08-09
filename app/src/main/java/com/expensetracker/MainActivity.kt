@@ -29,6 +29,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var categorySummaryLayout: MaterialCardView
     private lateinit var categorySummaryRecyclerView: RecyclerView
     private lateinit var categorySummaryAdapter: CategorySummaryAdapter
+    private lateinit var expensesHeaderView: TextView
     
     private var categories: List<Category> = emptyList()
     private var bankUpiList: List<BankUpi> = emptyList()
@@ -57,6 +58,7 @@ class MainActivity : AppCompatActivity() {
             fabAdd = findViewById(R.id.fabAdd)
             categorySummaryLayout = findViewById(R.id.layoutCategorySummary)
             categorySummaryRecyclerView = findViewById(R.id.rvCategorySummary)
+            expensesHeaderView = findViewById(R.id.tvExpensesHeader)
             
             android.util.Log.d("ExpenseTracker", "Step 5: Setup RecyclerView adapter")
             // Setup RecyclerView
@@ -87,6 +89,9 @@ class MainActivity : AppCompatActivity() {
             // Observe current expenses (switches between all and filtered)
             viewModel.currentExpenses.observe(this) { expenses ->
                 val isFiltering = viewModel.isFiltering()
+                
+                // Update header text based on filter state
+                expensesHeaderView.text = if (isFiltering) "Expenses" else "All Expenses"
                 
                 if (expenses.isEmpty()) {
                     recyclerView.visibility = View.GONE
