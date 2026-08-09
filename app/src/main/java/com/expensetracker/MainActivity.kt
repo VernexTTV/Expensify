@@ -858,8 +858,8 @@ class MainActivity : AppCompatActivity() {
             }
             
             // Validate amount is not too large
-            if (amount > 10000000.0) { // 1 crore limit
-                Toast.makeText(this, "Amount is too large (max: ₹1,00,00,000)", Toast.LENGTH_SHORT).show()
+            if (amount > 100000000.0) { // 10 crore limit
+                Toast.makeText(this, "Amount is too large (max: ₹10,00,00,000)", Toast.LENGTH_SHORT).show()
                 amountEdit.error = "Amount too large"
                 return@setOnClickListener
             }
