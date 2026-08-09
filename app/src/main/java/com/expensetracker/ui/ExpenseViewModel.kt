@@ -4,7 +4,8 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Transformations
+import androidx.lifecycle.map
+import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
 import com.expensetracker.data.*
 import kotlinx.coroutines.Dispatchers
@@ -46,10 +47,10 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
     
     // Filtered expenses - switches between all expenses and filtered based on state
     private val _currentExpenses = MutableLiveData<LiveData<List<Expense>>>()
-    val currentExpenses: LiveData<List<Expense>> = Transformations.switchMap(_currentExpenses) { it }
+    val currentExpenses: LiveData<List<Expense>> = _currentExpenses.switchMap { it }
     
     private val _currentTotal = MutableLiveData<LiveData<Double?>>()
-    val currentTotal: LiveData<Double?> = Transformations.switchMap(_currentTotal) { it }
+    val currentTotal: LiveData<Double?> = _currentTotal.switchMap { it }
     
     // Category summary with caching
     private val _categorySummary = MutableLiveData<List<CategorySummary>>()
@@ -285,7 +286,7 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
         }
         
         // Apply client-side filters using Transformations
-        val filteredExpenses = Transformations.map(baseExpenses) { expenses ->
+        val filteredExpenses = baseExpenses.map { expenses ->
             var filtered = expenses
             
             // Filter by amount range
@@ -312,7 +313,7 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
         _currentExpenses.value = filteredExpenses
         
         // Calculate filtered total
-        val filteredTotal = Transformations.map(filteredExpenses) { expenses ->
+        val filteredTotal = filteredExpenses.map { expenses ->
             expenses.sumOf { it.amount }
         }
         _currentTotal.value = filteredTotal

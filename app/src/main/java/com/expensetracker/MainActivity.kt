@@ -29,7 +29,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var categorySummaryLayout: MaterialCardView
     private lateinit var categorySummaryRecyclerView: RecyclerView
     private lateinit var categorySummaryAdapter: CategorySummaryAdapter
-    private lateinit var progressBar: ProgressBar
     
     private var categories: List<Category> = emptyList()
     private var bankUpiList: List<BankUpi> = emptyList()
@@ -58,9 +57,6 @@ class MainActivity : AppCompatActivity() {
             fabAdd = findViewById(R.id.fabAdd)
             categorySummaryLayout = findViewById(R.id.layoutCategorySummary)
             categorySummaryRecyclerView = findViewById(R.id.rvCategorySummary)
-            progressBar = findViewById(R.id.progressBar) ?: ProgressBar(this).apply {
-                visibility = View.GONE
-            }
             
             android.util.Log.d("ExpenseTracker", "Step 5: Setup RecyclerView adapter")
             // Setup RecyclerView
@@ -122,10 +118,7 @@ class MainActivity : AppCompatActivity() {
             }
             
             android.util.Log.d("ExpenseTracker", "Step 10: Observe loading state")
-            // Observe loading state
-            viewModel.isLoading.observe(this) { isLoading ->
-                progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-            }
+            // Observe loading state (no progressBar in layout, skipped)
             
             android.util.Log.d("ExpenseTracker", "Step 11: Observe error messages")
             // Observe error messages
@@ -235,6 +228,11 @@ class MainActivity : AppCompatActivity() {
         val timeZone = java.util.TimeZone.getDefault()
         dateFormat.timeZone = timeZone
         
+        // Setup Year List (declare early so it's available in date picker callbacks)
+        val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+        val years = mutableListOf("All")
+        years.addAll((currentYear - 5..currentYear + 2).map { it.toString() })
+        
         // Show current start date if exists
         if (selectedStartDate != null) {
             btnStartDate.text = dateFormat.format(Date(selectedStartDate!!))
@@ -298,9 +296,6 @@ class MainActivity : AppCompatActivity() {
         spinnerMonth.adapter = monthAdapter
         
         // Setup Year Spinner (last 5 years to next 2 years)
-        val currentYear = Calendar.getInstance().get(Calendar.YEAR)
-        val years = mutableListOf("All")
-        years.addAll((currentYear - 5..currentYear + 2).map { it.toString() })
         val yearAdapter = android.widget.ArrayAdapter(this, android.R.layout.simple_spinner_item, years)
         yearAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerYear.adapter = yearAdapter
