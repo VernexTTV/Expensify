@@ -33,6 +33,7 @@ class MainActivity : AppCompatActivity() {
     
     private var categories: List<Category> = emptyList()
     private var bankUpiList: List<BankUpi> = emptyList()
+    private var expenseSourceList: List<ExpenseSource> = emptyList()
     
     override fun onCreate(savedInstanceState: Bundle?) {
         android.util.Log.d("ExpenseTracker", "=== MainActivity onCreate START ===")
@@ -157,6 +158,12 @@ class MainActivity : AppCompatActivity() {
             // Observe bank/UPI list
             viewModel.allBankUpi.observe(this) { list ->
                 bankUpiList = list
+            }
+            
+            android.util.Log.d("ExpenseTracker", "Step 14.5: Observe expense sources")
+            // Observe expense sources
+            viewModel.allExpenseSources.observe(this) { list ->
+                expenseSourceList = list
             }
             
             android.util.Log.d("ExpenseTracker", "Step 15: Setup FAB")
@@ -673,6 +680,84 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
     
+    private fun showManageExpenseSourcesDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_manage_expense_sources, null)
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .create()
+        
+        val expenseSourceNameEdit: EditText = dialogView.findViewById(R.id.etExpenseSourceName)
+        val btnAddExpenseSource: Button = dialogView.findViewById(R.id.btnAddExpenseSource)
+        val rvExpenseSources: RecyclerView = dialogView.findViewById(R.id.rvExpenseSources)
+        val btnClose: Button = dialogView.findViewById(R.id.btnCloseExpenseSource)
+        
+        // Setup RecyclerView for expense sources
+        val expenseSourceAdapter = ExpenseSourceAdapter(
+            onEditClick = { expenseSource -> showEditExpenseSourceDialog(expenseSource) },
+            onDeleteClick = { expenseSource -> 
+                AlertDialog.Builder(this)
+                    .setTitle("Delete Expense Source")
+                    .setMessage("Are you sure you want to delete '${expenseSource.name}'?")
+                    .setPositiveButton("Delete") { _, _ ->
+                        viewModel.deleteExpenseSource(expenseSource)
+                        Toast.makeText(this, "Deleted successfully", Toast.LENGTH_SHORT).show()
+                    }
+                    .setNegativeButton("Cancel", null)
+                    .show()
+            }
+        )
+        
+        rvExpenseSources.adapter = expenseSourceAdapter
+        rvExpenseSources.layoutManager = LinearLayoutManager(this)
+        
+        // Observe expense sources
+        viewModel.allExpenseSources.observe(this) { list ->
+            expenseSourceAdapter.submitList(list)
+        }
+        
+        btnAddExpenseSource.setOnClickListener {
+            val name = expenseSourceNameEdit.text.toString().trim()
+            if (name.isEmpty()) {
+                Toast.makeText(this, "Please enter name", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            
+            val expenseSource = ExpenseSource(name = name)
+            viewModel.insertExpenseSource(expenseSource)
+            expenseSourceNameEdit.text.clear()
+            Toast.makeText(this, "Added successfully", Toast.LENGTH_SHORT).show()
+        }
+        
+        btnClose.setOnClickListener {
+            dialog.dismiss()
+        }
+        
+        dialog.show()
+    }
+    
+    private fun showEditExpenseSourceDialog(expenseSource: ExpenseSource) {
+        val editText = EditText(this)
+        editText.setText(expenseSource.name)
+        editText.hint = "Name"
+        
+        AlertDialog.Builder(this)
+            .setTitle("Edit Expense Source")
+            .setView(editText)
+            .setPositiveButton("Save") { _, _ ->
+                val newName = editText.text.toString().trim()
+                if (newName.isEmpty()) {
+                    Toast.makeText(this, "Name cannot be empty", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+                
+                val updated = expenseSource.copy(name = newName)
+                viewModel.updateExpenseSource(updated)
+                Toast.makeText(this, "Updated successfully", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+    
     private fun showAddEditDialog(expense: Expense?) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_add_expense, null)
         val dialog = AlertDialog.Builder(this)
@@ -689,6 +774,8 @@ class MainActivity : AppCompatActivity() {
         val bankUpiSpinner: Spinner = dialogView.findViewById(R.id.spinnerBankUpi)
         val btnManageBankUpi: Button = dialogView.findViewById(R.id.btnManageBankUpi)
         val bankUpiLabel: TextView = dialogView.findViewById(R.id.tvBankUpiLabel)
+        val expenseSourceSpinner: Spinner = dialogView.findViewById(R.id.spinnerExpenseSource)
+        val btnManageExpenseSources: Button = dialogView.findViewById(R.id.btnManageExpenseSources)
         val descriptionEdit: EditText = dialogView.findViewById(R.id.etDescription)
         val saveButton: Button = dialogView.findViewById(R.id.btnSave)
         val cancelButton: Button = dialogView.findViewById(R.id.btnCancel)
@@ -825,6 +912,36 @@ class MainActivity : AppCompatActivity() {
             showManageBankUpiDialog()
         }
         
+        // Setup expense source spinner
+        fun refreshExpenseSourceSpinner() {
+            val sourceNames = mutableListOf("None")
+            sourceNames.addAll(expenseSourceList.map { it.name })
+            val sourceAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, sourceNames)
+            sourceAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            expenseSourceSpinner.adapter = sourceAdapter
+            
+            // Pre-select expense source if editing
+            if (expense?.expenseSourceId != null) {
+                val sourceIndex = expenseSourceList.indexOfFirst { it.id == expense.expenseSourceId }
+                if (sourceIndex >= 0) {
+                    expenseSourceSpinner.setSelection(sourceIndex + 1) // +1 because "None" is at index 0
+                }
+            }
+        }
+        
+        // Initial setup
+        refreshExpenseSourceSpinner()
+        
+        // Observe expense source changes to refresh spinner in real-time
+        viewModel.allExpenseSources.observe(this) { sourceList ->
+            expenseSourceList = sourceList
+            refreshExpenseSourceSpinner()
+        }
+        
+        btnManageExpenseSources.setOnClickListener {
+            showManageExpenseSourcesDialog()
+        }
+        
         // Pre-fill if editing
         if (expense != null) {
             amountEdit.setText(expense.amount.toString())
@@ -901,6 +1018,13 @@ class MainActivity : AppCompatActivity() {
                 upiApp = bankUpiSpinner.selectedItem.toString()
             }
             
+            // Get expense source if selected
+            val expenseSourceId = if (expenseSourceSpinner.selectedItemPosition > 0) {
+                expenseSourceList[expenseSourceSpinner.selectedItemPosition - 1].id
+            } else {
+                null
+            }
+            
             val newExpense = Expense(
                 id = expense?.id ?: 0,
                 date = selectedDate,
@@ -909,6 +1033,7 @@ class MainActivity : AppCompatActivity() {
                 categoryId = categoryId,
                 bankName = bankName,
                 upiApp = upiApp,
+                expenseSourceId = expenseSourceId,
                 description = descriptionEdit.text.toString().trim().ifEmpty { null }
             )
             
@@ -1052,6 +1177,43 @@ class MainActivity : AppCompatActivity() {
             fun bind(summary: CategorySummary) {
                 tvName.text = summary.categoryName
                 tvAmount.text = "₹${String.format("%.2f", summary.totalAmount)}"
+            }
+        }
+    }
+    
+    // Adapter for Expense Source list in management dialog
+    private inner class ExpenseSourceAdapter(
+        private val onEditClick: (ExpenseSource) -> Unit,
+        private val onDeleteClick: (ExpenseSource) -> Unit
+    ) : RecyclerView.Adapter<ExpenseSourceAdapter.ViewHolder>() {
+        
+        private var items: List<ExpenseSource> = emptyList()
+        
+        fun submitList(list: List<ExpenseSource>) {
+            items = list
+            notifyDataSetChanged()
+        }
+        
+        override fun onCreateViewHolder(parent: android.view.ViewGroup, viewType: Int): ViewHolder {
+            val view = layoutInflater.inflate(R.layout.item_expense_source, parent, false)
+            return ViewHolder(view)
+        }
+        
+        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+            holder.bind(items[position])
+        }
+        
+        override fun getItemCount() = items.size
+        
+        inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+            private val tvName: TextView = itemView.findViewById(R.id.tvExpenseSourceName)
+            private val btnEdit: ImageButton = itemView.findViewById(R.id.btnEditExpenseSource)
+            private val btnDelete: ImageButton = itemView.findViewById(R.id.btnDeleteExpenseSource)
+            
+            fun bind(expenseSource: ExpenseSource) {
+                tvName.text = expenseSource.name
+                btnEdit.setOnClickListener { onEditClick(expenseSource) }
+                btnDelete.setOnClickListener { onDeleteClick(expenseSource) }
             }
         }
     }

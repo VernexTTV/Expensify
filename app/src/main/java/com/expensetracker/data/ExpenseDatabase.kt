@@ -8,14 +8,14 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [Expense::class, Category::class, BankUpi::class, OrderedFrom::class], version = 4, exportSchema = false)
+@Database(entities = [Expense::class, Category::class, BankUpi::class, ExpenseSource::class], version = 4, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class ExpenseDatabase : RoomDatabase() {
     
     abstract fun expenseDao(): ExpenseDao
     abstract fun categoryDao(): CategoryDao
     abstract fun bankUpiDao(): BankUpiDao
-    abstract fun orderedFromDao(): OrderedFromDao
+    abstract fun expenseSourceDao(): ExpenseSourceDao
     
     companion object {
         @Volatile
@@ -62,17 +62,17 @@ abstract class ExpenseDatabase : RoomDatabase() {
         // Migration from version 3 to version 4
         private val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(database: SupportSQLiteDatabase) {
-                // Create ordered_from table
+                // Create expense_sources table
                 database.execSQL("""
-                    CREATE TABLE IF NOT EXISTS `ordered_from` (
+                    CREATE TABLE IF NOT EXISTS `expense_sources` (
                         `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         `name` TEXT NOT NULL
                     )
                 """)
                 
-                // Add orderedFromId column to expenses table (nullable)
+                // Add expenseSourceId column to expenses table (nullable)
                 database.execSQL("""
-                    ALTER TABLE expenses ADD COLUMN orderedFromId INTEGER
+                    ALTER TABLE expenses ADD COLUMN expenseSourceId INTEGER
                 """)
             }
         }

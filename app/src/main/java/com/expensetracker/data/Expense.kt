@@ -23,7 +23,7 @@ data class Expense(
     val categoryId: Long? = null, // Foreign key to Category
     val bankName: String? = null, // For Credit Card or Debit Card
     val upiApp: String? = null, // For UPI
-    val orderedFromId: Long? = null, // Foreign key to OrderedFrom (Restaurant, Shop, etc.)
+    val expenseSourceId: Long? = null, // Foreign key to ExpenseSource (Restaurant, Shop, Online Store, etc.)
     val description: String? = null // Optional note
 )
 

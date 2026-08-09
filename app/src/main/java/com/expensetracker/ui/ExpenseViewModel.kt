@@ -16,11 +16,13 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
     private val repository: ExpenseRepository
     private val categoryRepository: CategoryRepository
     private val bankUpiRepository: BankUpiRepository
+    private val expenseSourceRepository: ExpenseSourceRepository
     
     val allExpenses: LiveData<List<Expense>>
     val totalExpenses: LiveData<Double?>
     val allCategories: LiveData<List<Category>>
     val allBankUpi: LiveData<List<BankUpi>>
+    val allExpenseSources: LiveData<List<ExpenseSource>>
     
     // Error handling
     private val _errorMessage = MutableLiveData<String?>()
@@ -67,17 +69,20 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
             val expenseDao = database.expenseDao()
             val categoryDao = database.categoryDao()
             val bankUpiDao = database.bankUpiDao()
+            val expenseSourceDao = database.expenseSourceDao()
             
             android.util.Log.d("ExpenseTracker", "Creating repositories...")
             repository = ExpenseRepository(expenseDao)
             categoryRepository = CategoryRepository(categoryDao)
             bankUpiRepository = BankUpiRepository(bankUpiDao)
+            expenseSourceRepository = ExpenseSourceRepository(expenseSourceDao)
             
             android.util.Log.d("ExpenseTracker", "Setting up LiveData...")
             allExpenses = repository.allExpenses
             totalExpenses = repository.totalExpenses
             allCategories = categoryRepository.allCategories
             allBankUpi = bankUpiRepository.allBankUpi
+            allExpenseSources = expenseSourceRepository.allExpenseSources
             
             // Initialize with all expenses by default
             _currentExpenses.value = allExpenses
@@ -255,6 +260,37 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
     
     fun getBankUpiByType(type: BankUpiType): LiveData<List<BankUpi>> {
         return bankUpiRepository.getBankUpiByType(type)
+    }
+    
+    // ExpenseSource operations with error handling
+    fun insertExpenseSource(expenseSource: ExpenseSource) = viewModelScope.launch(Dispatchers.IO) {
+        try {
+            expenseSourceRepository.insert(expenseSource)
+            _errorMessage.postValue(null)
+        } catch (e: Exception) {
+            android.util.Log.e("ExpenseTracker", "Error inserting expense source", e)
+            _errorMessage.postValue("Failed to add expense source: ${e.message}")
+        }
+    }
+    
+    fun updateExpenseSource(expenseSource: ExpenseSource) = viewModelScope.launch(Dispatchers.IO) {
+        try {
+            expenseSourceRepository.update(expenseSource)
+            _errorMessage.postValue(null)
+        } catch (e: Exception) {
+            android.util.Log.e("ExpenseTracker", "Error updating expense source", e)
+            _errorMessage.postValue("Failed to update expense source: ${e.message}")
+        }
+    }
+    
+    fun deleteExpenseSource(expenseSource: ExpenseSource) = viewModelScope.launch(Dispatchers.IO) {
+        try {
+            expenseSourceRepository.delete(expenseSource)
+            _errorMessage.postValue(null)
+        } catch (e: Exception) {
+            android.util.Log.e("ExpenseTracker", "Error deleting expense source", e)
+            _errorMessage.postValue("Failed to delete expense source: ${e.message}")
+        }
     }
     
     // Multi-criteria filter with client-side filtering for complex scenarios
