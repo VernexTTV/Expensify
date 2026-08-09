@@ -309,12 +309,15 @@ class MainActivity : AppCompatActivity() {
             if (yearIndex != -1) {
                 spinnerYear.setSelection(yearIndex)
             }
-        } else {
-            // Set current year as default only if no filter state
+        } else if (selectedStartDate == null && selectedEndDate == null) {
+            // Set current year as default ONLY if no filter state at all (no custom dates either)
             val currentYearIndex = years.indexOf(currentYear.toString())
             if (currentYearIndex != -1) {
                 spinnerYear.setSelection(currentYearIndex)
             }
+        } else {
+            // If custom dates exist, set year to "All"
+            spinnerYear.setSelection(0)
         }
         
         // Add listeners to clear custom dates when month/year is selected
