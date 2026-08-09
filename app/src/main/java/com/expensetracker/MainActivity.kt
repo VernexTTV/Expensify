@@ -435,14 +435,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
         
-        // Pre-select payment mode chips based on current filter
-        currentFilterState?.paymentModes?.let { modes ->
-            cbCreditCard.isChecked = PaymentMode.CREDIT_CARD in modes
-            cbDebitCard.isChecked = PaymentMode.DEBIT_CARD in modes
-            cbUpi.isChecked = PaymentMode.UPI in modes
-            cbCash.isChecked = PaymentMode.CASH in modes
-        }
-        
         // Clear filters button
         btnClear.setOnClickListener {
             clearFilters()
