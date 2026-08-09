@@ -314,7 +314,7 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
         
         // Calculate filtered total
         val filteredTotal = filteredExpenses.map { expenses ->
-            expenses.sumOf { it.amount }
+            expenses.sumOf { it.amount } as Double?
         }
         _currentTotal.value = filteredTotal
         
