@@ -48,7 +48,7 @@ class MainActivity : AppCompatActivity() {
             // Setup toolbar
             val toolbar: androidx.appcompat.widget.Toolbar = findViewById(R.id.toolbar)
             setSupportActionBar(toolbar)
-            supportActionBar?.title = "Expense Tracker"
+            supportActionBar?.title = "Expensify"
             
             android.util.Log.d("ExpenseTracker", "Step 4: Initialize views")
             // Initialize views
