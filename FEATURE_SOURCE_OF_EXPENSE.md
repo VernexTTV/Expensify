@@ -134,10 +134,40 @@ Committed as: "Add Source of Expense feature - Complete implementation"
 ## Next Steps (Optional Enhancements)
 1. Add emoji/icon selector for each source
 2. Show source name in expense list view
-3. Add filter by source in the filter dialog
+3. ~~Add filter by source in the filter dialog~~ ✅ **DONE**
 4. Analytics: spending by source
 5. Auto-suggest sources based on category
 6. Import common sources from a default list
+
+## Filter Feature ✅
+
+### Added in Update 2
+The expense tracker now supports filtering by expense sources!
+
+**Location in Filter Dialog:**
+- Positioned after "Payment Methods" section
+- Before "Categories" section
+- Section header: "🏪 Source of Expense"
+
+**Features:**
+- Multi-select checkboxes (select multiple sources at once)
+- Works with other filters (date, amount, payment mode, category)
+- Preserves selection when reopening filter dialog
+- Shows only expenses from selected sources
+- Combines with AND logic (expense must match ALL selected filters)
+
+**Example Use Cases:**
+1. "Show me all expenses from Amazon this month"
+2. "Show UPI payments from Zomato and Swiggy"
+3. "Show all supermarket expenses over ₹500"
+4. "Show credit card expenses from online stores"
+
+**Technical Implementation:**
+- Added `expenseSourceIds` to `FilterState` data class
+- Updated `applyFilters()` to include source filtering
+- Client-side filtering using Kotlin filter operations
+- Real-time updates when sources change
+- Proper state persistence across configuration changes
 
 ## Build Status
 ✅ Code pushed to GitHub
@@ -145,7 +175,12 @@ Committed as: "Add Source of Expense feature - Complete implementation"
 📦 APK will be available as artifact once build completes
 
 ---
-**Feature Status**: ✅ COMPLETE
+**Feature Status**: ✅ COMPLETE (including filters)
 **Database Migration**: ✅ v3 → v4
 **UI Integration**: ✅ Full add/edit/delete support
+**Filter Integration**: ✅ Multi-select filtering
 **Ready for Testing**: ✅ Yes
+
+## Commits
+1. `0f0188a` - Add Source of Expense feature - Complete implementation
+2. `ae9b10b` - Add expense source multi-filter to filter dialog
