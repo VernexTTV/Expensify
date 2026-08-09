@@ -3,6 +3,8 @@ package com.expensetracker.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Transformations
 import androidx.lifecycle.viewModelScope
 import com.expensetracker.data.*
 import kotlinx.coroutines.Dispatchers
@@ -19,6 +21,41 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
     val allCategories: LiveData<List<Category>>
     val allBankUpi: LiveData<List<BankUpi>>
     
+    // Error handling
+    private val _errorMessage = MutableLiveData<String?>()
+    val errorMessage: LiveData<String?> = _errorMessage
+    
+    // Loading state
+    private val _isLoading = MutableLiveData<Boolean>()
+    val isLoading: LiveData<Boolean> = _isLoading
+    
+    // Filter state - persists across configuration changes
+    data class FilterState(
+        val minAmount: Double? = null,
+        val maxAmount: Double? = null,
+        val startDate: Long? = null,
+        val endDate: Long? = null,
+        val paymentModes: List<PaymentMode> = emptyList(),
+        val categoryIds: List<Long> = emptyList(),
+        val selectedMonth: Int? = null, // 0 = All, 1-12 = Jan-Dec
+        val selectedYear: Int? = null   // Year number or null for "All"
+    )
+    
+    private val _filterState = MutableLiveData<FilterState>(FilterState())
+    val filterState: LiveData<FilterState> = _filterState
+    
+    // Filtered expenses - switches between all expenses and filtered based on state
+    private val _currentExpenses = MutableLiveData<LiveData<List<Expense>>>()
+    val currentExpenses: LiveData<List<Expense>> = Transformations.switchMap(_currentExpenses) { it }
+    
+    private val _currentTotal = MutableLiveData<LiveData<Double?>>()
+    val currentTotal: LiveData<Double?> = Transformations.switchMap(_currentTotal) { it }
+    
+    // Category summary with caching
+    private val _categorySummary = MutableLiveData<List<CategorySummary>>()
+    val categorySummary: LiveData<List<CategorySummary>> = _categorySummary
+    
+    // Automatically update category summary when either expenses or categories change
     init {
         android.util.Log.d("ExpenseTracker", "=== ViewModel init START ===")
         try {
@@ -41,24 +78,104 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
             allCategories = categoryRepository.allCategories
             allBankUpi = bankUpiRepository.allBankUpi
             
+            // Initialize with all expenses by default
+            _currentExpenses.value = allExpenses
+            _currentTotal.value = totalExpenses
+            
+            // Auto-update category summary when expenses or categories change
+            setupCategorySummaryAutoUpdate()
+            
             android.util.Log.d("ExpenseTracker", "=== ViewModel init SUCCESS ===")
         } catch (e: Exception) {
             android.util.Log.e("ExpenseTracker", "=== ViewModel init FAILED ===", e)
+            _errorMessage.postValue("Failed to initialize database: ${e.message}")
             throw e
         }
     }
     
-    // Expense operations
+    private fun setupCategorySummaryAutoUpdate() {
+        // Combine currentExpenses and allCategories to auto-update summary
+        val mediator = androidx.lifecycle.MediatorLiveData<Pair<List<Expense>, List<Category>>>()
+        
+        mediator.addSource(currentExpenses) { expenses ->
+            val categories = allCategories.value ?: emptyList()
+            mediator.value = Pair(expenses ?: emptyList(), categories)
+        }
+        
+        mediator.addSource(allCategories) { categories ->
+            val expenses = currentExpenses.value ?: emptyList()
+            mediator.value = Pair(expenses, categories ?: emptyList())
+        }
+        
+        // Whenever either changes, recalculate summary
+        mediator.observeForever { (expenses, categories) ->
+            calculateCategorySummary(expenses, categories)
+        }
+    }
+    
+    private fun calculateCategorySummary(expenses: List<Expense>, categories: List<Category>) {
+        viewModelScope.launch(Dispatchers.Default) {
+            if (expenses.isEmpty()) {
+                _categorySummary.postValue(emptyList())
+                return@launch
+            }
+            
+            val categoryTotals = mutableMapOf<String, Double>()
+            
+            expenses.forEach { expense ->
+                val categoryName = expense.categoryId?.let { id ->
+                    categories.find { it.id == id }?.name
+                } ?: "Uncategorized"
+                
+                categoryTotals[categoryName] = (categoryTotals[categoryName] ?: 0.0) + expense.amount
+            }
+            
+            val summaryList = categoryTotals.map { (name, amount) ->
+                CategorySummary(name, amount)
+            }.sortedByDescending { it.totalAmount }
+            
+            _categorySummary.postValue(summaryList)
+        }
+    }
+    
+    // Expense operations with error handling
     fun insert(expense: Expense) = viewModelScope.launch(Dispatchers.IO) {
-        repository.insert(expense)
+        try {
+            _isLoading.postValue(true)
+            repository.insert(expense)
+            _errorMessage.postValue(null)
+        } catch (e: Exception) {
+            android.util.Log.e("ExpenseTracker", "Error inserting expense", e)
+            _errorMessage.postValue("Failed to add expense: ${e.message}")
+        } finally {
+            _isLoading.postValue(false)
+        }
     }
     
     fun update(expense: Expense) = viewModelScope.launch(Dispatchers.IO) {
-        repository.update(expense)
+        try {
+            _isLoading.postValue(true)
+            repository.update(expense)
+            _errorMessage.postValue(null)
+        } catch (e: Exception) {
+            android.util.Log.e("ExpenseTracker", "Error updating expense", e)
+            _errorMessage.postValue("Failed to update expense: ${e.message}")
+        } finally {
+            _isLoading.postValue(false)
+        }
     }
     
     fun delete(expense: Expense) = viewModelScope.launch(Dispatchers.IO) {
-        repository.delete(expense)
+        try {
+            _isLoading.postValue(true)
+            repository.delete(expense)
+            _errorMessage.postValue(null)
+        } catch (e: Exception) {
+            android.util.Log.e("ExpenseTracker", "Error deleting expense", e)
+            _errorMessage.postValue("Failed to delete expense: ${e.message}")
+        } finally {
+            _isLoading.postValue(false)
+        }
     }
     
     fun getExpensesByDateRange(startDate: Long, endDate: Long): LiveData<List<Expense>> {
@@ -73,56 +190,158 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
         return repository.getTotalExpensesByDateRange(startDate, endDate)
     }
     
-    // Category operations
+    // Category operations with error handling
     fun insertCategory(category: Category) = viewModelScope.launch(Dispatchers.IO) {
-        categoryRepository.insert(category)
+        try {
+            categoryRepository.insert(category)
+            _errorMessage.postValue(null)
+        } catch (e: Exception) {
+            android.util.Log.e("ExpenseTracker", "Error inserting category", e)
+            _errorMessage.postValue("Failed to add category: ${e.message}")
+        }
     }
     
     fun updateCategory(category: Category) = viewModelScope.launch(Dispatchers.IO) {
-        categoryRepository.update(category)
+        try {
+            categoryRepository.update(category)
+            _errorMessage.postValue(null)
+        } catch (e: Exception) {
+            android.util.Log.e("ExpenseTracker", "Error updating category", e)
+            _errorMessage.postValue("Failed to update category: ${e.message}")
+        }
     }
     
     fun deleteCategory(category: Category) = viewModelScope.launch(Dispatchers.IO) {
-        categoryRepository.delete(category)
+        try {
+            categoryRepository.delete(category)
+            _errorMessage.postValue(null)
+        } catch (e: Exception) {
+            android.util.Log.e("ExpenseTracker", "Error deleting category", e)
+            _errorMessage.postValue("Failed to delete category: ${e.message}")
+        }
     }
     
-    // BankUpi operations
+    // BankUpi operations with error handling
     fun insertBankUpi(bankUpi: BankUpi) = viewModelScope.launch(Dispatchers.IO) {
-        bankUpiRepository.insert(bankUpi)
+        try {
+            bankUpiRepository.insert(bankUpi)
+            _errorMessage.postValue(null)
+        } catch (e: Exception) {
+            android.util.Log.e("ExpenseTracker", "Error inserting bank/UPI", e)
+            _errorMessage.postValue("Failed to add bank/UPI: ${e.message}")
+        }
     }
     
     fun updateBankUpi(bankUpi: BankUpi) = viewModelScope.launch(Dispatchers.IO) {
-        bankUpiRepository.update(bankUpi)
+        try {
+            bankUpiRepository.update(bankUpi)
+            _errorMessage.postValue(null)
+        } catch (e: Exception) {
+            android.util.Log.e("ExpenseTracker", "Error updating bank/UPI", e)
+            _errorMessage.postValue("Failed to update bank/UPI: ${e.message}")
+        }
     }
     
     fun deleteBankUpi(bankUpi: BankUpi) = viewModelScope.launch(Dispatchers.IO) {
-        bankUpiRepository.delete(bankUpi)
+        try {
+            bankUpiRepository.delete(bankUpi)
+            _errorMessage.postValue(null)
+        } catch (e: Exception) {
+            android.util.Log.e("ExpenseTracker", "Error deleting bank/UPI", e)
+            _errorMessage.postValue("Failed to delete bank/UPI: ${e.message}")
+        }
     }
     
     fun getBankUpiByType(type: BankUpiType): LiveData<List<BankUpi>> {
         return bankUpiRepository.getBankUpiByType(type)
     }
     
-    // Single-select filter operations
-    fun getFilteredExpenses(
+    // Multi-criteria filter with client-side filtering for complex scenarios
+    fun applyFilters(
+        minAmount: Double?,
+        maxAmount: Double?,
         startDate: Long?,
         endDate: Long?,
-        categoryId: Long?,
-        paymentMode: PaymentMode?,
-        bankName: String?,
-        upiApp: String?
-    ): LiveData<List<Expense>> {
-        return repository.getFilteredExpenses(startDate, endDate, categoryId, paymentMode, bankName, upiApp)
+        paymentModes: List<PaymentMode>,
+        categoryIds: List<Long>,
+        selectedMonth: Int?,
+        selectedYear: Int?
+    ) {
+        _isLoading.value = true
+        
+        // Save filter state including month/year
+        _filterState.value = FilterState(minAmount, maxAmount, startDate, endDate, paymentModes, categoryIds, selectedMonth, selectedYear)
+        
+        // For complex multi-select filters, we need client-side filtering
+        // because Room doesn't support IN clauses with LiveData easily
+        val baseExpenses = if (startDate != null || endDate != null) {
+            // Use date range query if dates are specified
+            repository.getExpensesByDateRange(
+                startDate ?: 0L,
+                endDate ?: Long.MAX_VALUE
+            )
+        } else {
+            allExpenses
+        }
+        
+        // Apply client-side filters using Transformations
+        val filteredExpenses = Transformations.map(baseExpenses) { expenses ->
+            var filtered = expenses
+            
+            // Filter by amount range
+            if (minAmount != null) {
+                filtered = filtered.filter { it.amount >= minAmount }
+            }
+            if (maxAmount != null) {
+                filtered = filtered.filter { it.amount <= maxAmount }
+            }
+            
+            // Filter by payment modes
+            if (paymentModes.isNotEmpty()) {
+                filtered = filtered.filter { it.paymentMode in paymentModes }
+            }
+            
+            // Filter by categories
+            if (categoryIds.isNotEmpty()) {
+                filtered = filtered.filter { it.categoryId in categoryIds }
+            }
+            
+            filtered
+        }
+        
+        _currentExpenses.value = filteredExpenses
+        
+        // Calculate filtered total
+        val filteredTotal = Transformations.map(filteredExpenses) { expenses ->
+            expenses.sumOf { it.amount }
+        }
+        _currentTotal.value = filteredTotal
+        
+        _isLoading.value = false
     }
     
-    fun getFilteredTotal(
-        startDate: Long?,
-        endDate: Long?,
-        categoryId: Long?,
-        paymentMode: PaymentMode?,
-        bankName: String?,
-        upiApp: String?
-    ): LiveData<Double?> {
-        return repository.getFilteredTotal(startDate, endDate, categoryId, paymentMode, bankName, upiApp)
+    fun clearFilters() {
+        _filterState.value = FilterState()
+        _currentExpenses.value = allExpenses
+        _currentTotal.value = totalExpenses
+    }
+    
+    fun isFiltering(): Boolean {
+        val state = _filterState.value ?: return false
+        return state.minAmount != null || 
+               state.maxAmount != null || 
+               state.startDate != null || 
+               state.endDate != null || 
+               state.paymentModes.isNotEmpty() || 
+               state.categoryIds.isNotEmpty()
+    }
+    
+    data class CategorySummary(
+        val categoryName: String,
+        val totalAmount: Double
+    )
+    
+    fun clearError() {
+        _errorMessage.value = null
     }
 }

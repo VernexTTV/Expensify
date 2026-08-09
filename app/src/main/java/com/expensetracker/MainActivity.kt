@@ -29,18 +29,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var categorySummaryLayout: MaterialCardView
     private lateinit var categorySummaryRecyclerView: RecyclerView
     private lateinit var categorySummaryAdapter: CategorySummaryAdapter
+    private lateinit var progressBar: ProgressBar
     
     private var categories: List<Category> = emptyList()
     private var bankUpiList: List<BankUpi> = emptyList()
-    
-    // Filter state
-    private var isFiltering = false
-    private var currentFilterStartDate: Long? = null
-    private var currentFilterEndDate: Long? = null
-    private var currentFilterCategoryId: Long? = null
-    private var currentFilterPaymentMode: PaymentMode? = null
-    private var currentFilterBankName: String? = null
-    private var currentFilterUpiApp: String? = null
     
     override fun onCreate(savedInstanceState: Bundle?) {
         android.util.Log.d("ExpenseTracker", "=== MainActivity onCreate START ===")
@@ -66,6 +58,9 @@ class MainActivity : AppCompatActivity() {
             fabAdd = findViewById(R.id.fabAdd)
             categorySummaryLayout = findViewById(R.id.layoutCategorySummary)
             categorySummaryRecyclerView = findViewById(R.id.rvCategorySummary)
+            progressBar = findViewById(R.id.progressBar) ?: ProgressBar(this).apply {
+                visibility = View.GONE
+            }
             
             android.util.Log.d("ExpenseTracker", "Step 5: Setup RecyclerView adapter")
             // Setup RecyclerView
@@ -93,26 +88,32 @@ class MainActivity : AppCompatActivity() {
             viewModel = ViewModelProvider(this)[ExpenseViewModel::class.java]
             
             android.util.Log.d("ExpenseTracker", "Step 8: Observe expenses")
-            // Observe expenses
-            viewModel.allExpenses.observe(this) { expenses ->
+            // Observe current expenses (switches between all and filtered)
+            viewModel.currentExpenses.observe(this) { expenses ->
+                val isFiltering = viewModel.isFiltering()
+                
                 if (expenses.isEmpty()) {
                     recyclerView.visibility = View.GONE
-                    emptyView.visibility = View.VISIBLE
                     categorySummaryLayout.visibility = View.GONE
+                    emptyView.visibility = View.VISIBLE
+                    // Show different message based on whether filtering or not
+                    emptyView.text = if (isFiltering) {
+                        "No expenses match your filters\nTry adjusting the filter criteria"
+                    } else {
+                        "No expenses yet\nTap + to add"
+                    }
                 } else {
                     recyclerView.visibility = View.VISIBLE
                     emptyView.visibility = View.GONE
                     adapter.submitList(expenses)
-                    
-                    // Calculate and show category summary
-                    updateCategorySummary(expenses)
+                    // Category summary auto-updates via ViewModel MediatorLiveData
                 }
             }
             
             android.util.Log.d("ExpenseTracker", "Step 9: Observe total expenses")
-            // Observe total expenses
-            viewModel.totalExpenses.observe(this) { total ->
-                val totalText = if (total != null) {
+            // Observe current total (switches between all and filtered)
+            viewModel.currentTotal.observe(this) { total ->
+                val totalText = if (total != null && total > 0) {
                     "Total: ₹${String.format("%.2f", total)}"
                 } else {
                     "Total: ₹0.00"
@@ -120,25 +121,53 @@ class MainActivity : AppCompatActivity() {
                 totalAmountView.text = totalText
             }
             
-            android.util.Log.d("ExpenseTracker", "Step 10: Observe categories")
+            android.util.Log.d("ExpenseTracker", "Step 10: Observe loading state")
+            // Observe loading state
+            viewModel.isLoading.observe(this) { isLoading ->
+                progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+            }
+            
+            android.util.Log.d("ExpenseTracker", "Step 11: Observe error messages")
+            // Observe error messages
+            viewModel.errorMessage.observe(this) { errorMsg ->
+                if (!errorMsg.isNullOrEmpty()) {
+                    Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show()
+                    viewModel.clearError()
+                }
+            }
+            
+            android.util.Log.d("ExpenseTracker", "Step 12: Observe category summary")
+            // Observe category summary
+            viewModel.categorySummary.observe(this) { summaries ->
+                if (summaries.isNotEmpty()) {
+                    categorySummaryLayout.visibility = View.VISIBLE
+                    categorySummaryAdapter.submitList(summaries.map { 
+                        CategorySummary(it.categoryName, it.totalAmount) 
+                    })
+                } else {
+                    categorySummaryLayout.visibility = View.GONE
+                }
+            }
+            
+            android.util.Log.d("ExpenseTracker", "Step 13: Observe categories")
             // Observe categories
             viewModel.allCategories.observe(this) { categoryList ->
                 categories = categoryList
             }
             
-            android.util.Log.d("ExpenseTracker", "Step 11: Observe bank/UPI list")
+            android.util.Log.d("ExpenseTracker", "Step 14: Observe bank/UPI list")
             // Observe bank/UPI list
             viewModel.allBankUpi.observe(this) { list ->
                 bankUpiList = list
             }
             
-            android.util.Log.d("ExpenseTracker", "Step 12: Setup FAB")
+            android.util.Log.d("ExpenseTracker", "Step 15: Setup FAB")
             // Setup FAB
             fabAdd.setOnClickListener {
                 showAddEditDialog(null)
             }
             
-            android.util.Log.d("ExpenseTracker", "Step 13: Setup Filter Button")
+            android.util.Log.d("ExpenseTracker", "Step 16: Setup Filter Button")
             // Setup Filter Button (if exists in layout)
             val btnFilter: android.widget.Button? = findViewById(R.id.btnFilter)
             btnFilter?.setOnClickListener {
@@ -154,35 +183,7 @@ class MainActivity : AppCompatActivity() {
     
     
     private fun clearFilters() {
-        isFiltering = false
-        currentFilterStartDate = null
-        currentFilterEndDate = null
-        currentFilterCategoryId = null
-        currentFilterPaymentMode = null
-        currentFilterBankName = null
-        currentFilterUpiApp = null
-        
-        // Re-observe all expenses
-        viewModel.allExpenses.observe(this) { expenses ->
-            if (expenses.isEmpty()) {
-                recyclerView.visibility = View.GONE
-                emptyView.visibility = View.VISIBLE
-            } else {
-                recyclerView.visibility = View.VISIBLE
-                emptyView.visibility = View.GONE
-                adapter.submitList(expenses)
-            }
-        }
-        
-        viewModel.totalExpenses.observe(this) { total ->
-            val totalText = if (total != null) {
-                "Total: ₹${String.format("%.2f", total)}"
-            } else {
-                "Total: ₹0.00"
-            }
-            totalAmountView.text = totalText
-        }
-        
+        viewModel.clearFilters()
         Toast.makeText(this, "Filters cleared", Toast.LENGTH_SHORT).show()
     }
     
@@ -216,20 +217,50 @@ class MainActivity : AppCompatActivity() {
         val btnClear: Button = dialogView.findViewById(R.id.btnClearFilters)
         val btnApply: Button = dialogView.findViewById(R.id.btnApplyFilter)
         
-        // Date tracking
-        var selectedStartDate: Long? = null
-        var selectedEndDate: Long? = null
-        val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+        // Get current filter state from ViewModel
+        val currentFilterState = viewModel.filterState.value
         
-        // Setup date pickers
+        // Pre-populate amount fields with current filter
+        currentFilterState?.minAmount?.let {
+            etMinAmount.setText(it.toString())
+        }
+        currentFilterState?.maxAmount?.let {
+            etMaxAmount.setText(it.toString())
+        }
+        
+        // Date tracking with explicit timezone
+        var selectedStartDate: Long? = currentFilterState?.startDate
+        var selectedEndDate: Long? = currentFilterState?.endDate
+        val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+        val timeZone = java.util.TimeZone.getDefault()
+        dateFormat.timeZone = timeZone
+        
+        // Show current start date if exists
+        if (selectedStartDate != null) {
+            btnStartDate.text = dateFormat.format(Date(selectedStartDate!!))
+        }
+        
+        // Show current end date if exists
+        if (selectedEndDate != null) {
+            btnEndDate.text = dateFormat.format(Date(selectedEndDate!!))
+        }
+        
+        // Setup date pickers with explicit timezone
         btnStartDate.setOnClickListener {
-            val calendar = Calendar.getInstance()
+            val calendar = Calendar.getInstance(timeZone)
             DatePickerDialog(
                 this,
                 { _, year, month, day ->
+                    calendar.clear()
+                    calendar.timeZone = timeZone
                     calendar.set(year, month, day, 0, 0, 0)
+                    calendar.set(Calendar.MILLISECOND, 0)
                     selectedStartDate = calendar.timeInMillis
                     btnStartDate.text = dateFormat.format(Date(selectedStartDate!!))
+                    
+                    // Clear month/year selection when custom date is selected
+                    spinnerMonth.setSelection(0)
+                    spinnerYear.setSelection(years.indexOf("All"))
                 },
                 calendar.get(Calendar.YEAR),
                 calendar.get(Calendar.MONTH),
@@ -238,13 +269,20 @@ class MainActivity : AppCompatActivity() {
         }
         
         btnEndDate.setOnClickListener {
-            val calendar = Calendar.getInstance()
+            val calendar = Calendar.getInstance(timeZone)
             DatePickerDialog(
                 this,
                 { _, year, month, day ->
+                    calendar.clear()
+                    calendar.timeZone = timeZone
                     calendar.set(year, month, day, 23, 59, 59)
+                    calendar.set(Calendar.MILLISECOND, 999)
                     selectedEndDate = calendar.timeInMillis
                     btnEndDate.text = dateFormat.format(Date(selectedEndDate!!))
+                    
+                    // Clear month/year selection when custom date is selected
+                    spinnerMonth.setSelection(0)
+                    spinnerYear.setSelection(years.indexOf("All"))
                 },
                 calendar.get(Calendar.YEAR),
                 calendar.get(Calendar.MONTH),
@@ -267,10 +305,48 @@ class MainActivity : AppCompatActivity() {
         yearAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerYear.adapter = yearAdapter
         
-        // Set current year as default
-        val currentYearIndex = years.indexOf(currentYear.toString())
-        if (currentYearIndex != -1) {
-            spinnerYear.setSelection(currentYearIndex)
+        // Restore month/year selections from filter state
+        if (currentFilterState?.selectedMonth != null && currentFilterState.selectedMonth > 0) {
+            spinnerMonth.setSelection(currentFilterState.selectedMonth)
+        }
+        if (currentFilterState?.selectedYear != null) {
+            val yearIndex = years.indexOf(currentFilterState.selectedYear.toString())
+            if (yearIndex != -1) {
+                spinnerYear.setSelection(yearIndex)
+            }
+        } else {
+            // Set current year as default only if no filter state
+            val currentYearIndex = years.indexOf(currentYear.toString())
+            if (currentYearIndex != -1) {
+                spinnerYear.setSelection(currentYearIndex)
+            }
+        }
+        
+        // Add listeners to clear custom dates when month/year is selected
+        spinnerMonth.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                if (position > 0) { // If not "All"
+                    // Clear custom date selection
+                    selectedStartDate = null
+                    selectedEndDate = null
+                    btnStartDate.text = "Select Start Date"
+                    btnEndDate.text = "Select End Date"
+                }
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+        
+        spinnerYear.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                if (position > 0) { // If not "All"
+                    // Clear custom date selection
+                    selectedStartDate = null
+                    selectedEndDate = null
+                    btnStartDate.text = "Select Start Date"
+                    btnEndDate.text = "Select End Date"
+                }
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
         
         // Store checkbox references
@@ -288,9 +364,21 @@ class MainActivity : AppCompatActivity() {
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
                 )
+                
+                // Pre-check if this category was previously selected
+                checkbox.isChecked = currentFilterState?.categoryIds?.contains(category.id) == true
+                
                 categoryCheckboxes[category.id] = checkbox
                 layoutCategories.addView(checkbox)
             }
+        }
+        
+        // Pre-select payment mode chips based on current filter
+        currentFilterState?.paymentModes?.let { modes ->
+            cbCreditCard.isChecked = PaymentMode.CREDIT_CARD in modes
+            cbDebitCard.isChecked = PaymentMode.DEBIT_CARD in modes
+            cbUpi.isChecked = PaymentMode.UPI in modes
+            cbCash.isChecked = PaymentMode.CASH in modes
         }
         
         // Clear filters button
@@ -312,12 +400,27 @@ class MainActivity : AppCompatActivity() {
             val selectedYearStr = spinnerYear.selectedItem.toString()
             val selectedYear = if (selectedYearStr == "All") null else selectedYearStr.toIntOrNull()
             
+            // Check if both date selection methods are used (shouldn't happen with auto-clear, but validate anyway)
+            val hasCustomDateRange = selectedStartDate != null || selectedEndDate != null
+            val hasMonthYearSelection = selectedMonth > 0 && selectedYear != null
+            
+            if (hasCustomDateRange && hasMonthYearSelection) {
+                Toast.makeText(
+                    this,
+                    "Please use either Custom Date Range OR Month/Year selection, not both",
+                    Toast.LENGTH_LONG
+                ).show()
+                return@setOnClickListener
+            }
+            
             // Calculate date range from month/year if selected
             var monthStartDate: Long? = null
             var monthEndDate: Long? = null
             
             if (selectedMonth > 0 && selectedYear != null) {
-                val calendar = Calendar.getInstance()
+                val calendar = Calendar.getInstance(timeZone)
+                calendar.clear()
+                calendar.timeZone = timeZone
                 calendar.set(selectedYear, selectedMonth - 1, 1, 0, 0, 0)
                 calendar.set(Calendar.MILLISECOND, 0)
                 monthStartDate = calendar.timeInMillis
@@ -326,10 +429,11 @@ class MainActivity : AppCompatActivity() {
                 calendar.set(Calendar.HOUR_OF_DAY, 23)
                 calendar.set(Calendar.MINUTE, 59)
                 calendar.set(Calendar.SECOND, 59)
+                calendar.set(Calendar.MILLISECOND, 999)
                 monthEndDate = calendar.timeInMillis
             }
             
-            // Use month/year dates if selected, otherwise use date range
+            // Use month/year dates if selected, otherwise use custom date range
             val finalStartDate = monthStartDate ?: selectedStartDate
             val finalEndDate = monthEndDate ?: selectedEndDate
             
@@ -343,6 +447,10 @@ class MainActivity : AppCompatActivity() {
             // Get selected categories
             val selectedCategoryIds = categoryCheckboxes.filter { it.value.isChecked }.keys.toList()
             
+            // Store month/year for filter state (0 = All for month, null = All for year)
+            val monthForState = if (selectedMonth > 0) selectedMonth else null
+            val yearForState = if (selectedYearStr != "All") selectedYear else null
+            
             // Apply filters
             applyFilters(
                 minAmount,
@@ -350,7 +458,9 @@ class MainActivity : AppCompatActivity() {
                 finalStartDate,
                 finalEndDate,
                 selectedPaymentModes,
-                selectedCategoryIds
+                selectedCategoryIds,
+                monthForState,
+                yearForState
             )
             
             bottomSheet.dismiss()
@@ -365,54 +475,12 @@ class MainActivity : AppCompatActivity() {
         startDate: Long?,
         endDate: Long?,
         paymentModes: List<PaymentMode>,
-        categoryIds: List<Long>
+        categoryIds: List<Long>,
+        selectedMonth: Int?,
+        selectedYear: Int?
     ) {
-        isFiltering = true
-        
-        // Get all expenses and filter them
-        viewModel.allExpenses.observe(this) { allExpenses ->
-            var filteredExpenses = allExpenses
-            
-            // Filter by amount range
-            if (minAmount != null) {
-                filteredExpenses = filteredExpenses.filter { it.amount >= minAmount }
-            }
-            if (maxAmount != null) {
-                filteredExpenses = filteredExpenses.filter { it.amount <= maxAmount }
-            }
-            
-            // Filter by date range
-            if (startDate != null) {
-                filteredExpenses = filteredExpenses.filter { it.date >= startDate }
-            }
-            if (endDate != null) {
-                filteredExpenses = filteredExpenses.filter { it.date <= endDate }
-            }
-            
-            // Filter by payment modes
-            if (paymentModes.isNotEmpty()) {
-                filteredExpenses = filteredExpenses.filter { it.paymentMode in paymentModes }
-            }
-            
-            // Filter by categories
-            if (categoryIds.isNotEmpty()) {
-                filteredExpenses = filteredExpenses.filter { it.categoryId in categoryIds }
-            }
-            
-            // Update UI
-            if (filteredExpenses.isEmpty()) {
-                recyclerView.visibility = View.GONE
-                emptyView.visibility = View.VISIBLE
-            } else {
-                recyclerView.visibility = View.VISIBLE
-                emptyView.visibility = View.GONE
-                adapter.submitList(filteredExpenses)
-            }
-            
-            // Update total
-            val total = filteredExpenses.sumOf { it.amount }
-            totalAmountView.text = "Total: ₹${String.format("%.2f", total)}"
-        }
+        // Use ViewModel's applyFilters method - no memory leak!
+        viewModel.applyFilters(minAmount, maxAmount, startDate, endDate, paymentModes, categoryIds, selectedMonth, selectedYear)
         
         Toast.makeText(this, "Filters applied", Toast.LENGTH_SHORT).show()
     }
@@ -624,17 +692,22 @@ class MainActivity : AppCompatActivity() {
         
         var selectedDate = expense?.date ?: System.currentTimeMillis()
         val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+        val timeZone = java.util.TimeZone.getDefault()
+        dateFormat.timeZone = timeZone
         dateButton.text = dateFormat.format(Date(selectedDate))
         
-        // Date picker
+        // Date picker with explicit timezone
         dateButton.setOnClickListener {
-            val calendar = Calendar.getInstance()
+            val calendar = Calendar.getInstance(timeZone)
             calendar.timeInMillis = selectedDate
             
             DatePickerDialog(
                 this,
                 { _, year, month, day ->
-                    calendar.set(year, month, day)
+                    calendar.clear()
+                    calendar.timeZone = timeZone
+                    calendar.set(year, month, day, 0, 0, 0)
+                    calendar.set(Calendar.MILLISECOND, 0)
                     selectedDate = calendar.timeInMillis
                     dateButton.text = dateFormat.format(Date(selectedDate))
                 },
@@ -757,15 +830,46 @@ class MainActivity : AppCompatActivity() {
         }
         
         saveButton.setOnClickListener {
-            val amountStr = amountEdit.text.toString()
+            val amountStr = amountEdit.text.toString().trim()
+            
+            // Validate amount is not empty
             if (amountStr.isEmpty()) {
                 Toast.makeText(this, "Please enter amount", Toast.LENGTH_SHORT).show()
+                amountEdit.error = "Amount is required"
                 return@setOnClickListener
             }
             
+            // Validate amount is a valid number
             val amount = amountStr.toDoubleOrNull()
-            if (amount == null || amount <= 0) {
-                Toast.makeText(this, "Please enter valid amount", Toast.LENGTH_SHORT).show()
+            if (amount == null) {
+                Toast.makeText(this, "Please enter a valid number", Toast.LENGTH_SHORT).show()
+                amountEdit.error = "Invalid number format"
+                return@setOnClickListener
+            }
+            
+            // Validate amount is positive
+            if (amount <= 0) {
+                Toast.makeText(this, "Amount must be greater than zero", Toast.LENGTH_SHORT).show()
+                amountEdit.error = "Must be greater than 0"
+                return@setOnClickListener
+            }
+            
+            // Validate amount is not too large
+            if (amount > 10000000.0) { // 1 crore limit
+                Toast.makeText(this, "Amount is too large (max: ₹1,00,00,000)", Toast.LENGTH_SHORT).show()
+                amountEdit.error = "Amount too large"
+                return@setOnClickListener
+            }
+            
+            // Validate decimal places (max 2)
+            val decimalPlaces = if (amountStr.contains(".")) {
+                amountStr.substringAfter(".").length
+            } else {
+                0
+            }
+            if (decimalPlaces > 2) {
+                Toast.makeText(this, "Amount can have maximum 2 decimal places", Toast.LENGTH_SHORT).show()
+                amountEdit.error = "Max 2 decimal places"
                 return@setOnClickListener
             }
             
@@ -911,42 +1015,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
     
-    // Category Summary functionality
+    // Category Summary data class
     data class CategorySummary(
         val categoryName: String,
         val totalAmount: Double
     )
-    
-    private fun updateCategorySummary(expenses: List<Expense>) {
-        if (expenses.isEmpty()) {
-            categorySummaryLayout.visibility = View.GONE
-            return
-        }
-        
-        // Group expenses by category and calculate totals
-        val categoryTotals = mutableMapOf<String, Double>()
-        
-        expenses.forEach { expense ->
-            val categoryName = expense.categoryId?.let { id ->
-                categories.find { it.id == id }?.name
-            } ?: "Uncategorized"
-            
-            categoryTotals[categoryName] = (categoryTotals[categoryName] ?: 0.0) + expense.amount
-        }
-        
-        // Convert to list and sort by amount descending
-        val summaryList = categoryTotals.map { (name, amount) ->
-            CategorySummary(name, amount)
-        }.sortedByDescending { it.totalAmount }
-        
-        // Show summary
-        if (summaryList.isNotEmpty()) {
-            categorySummaryLayout.visibility = View.VISIBLE
-            categorySummaryAdapter.submitList(summaryList)
-        } else {
-            categorySummaryLayout.visibility = View.GONE
-        }
-    }
     
     // Adapter for Category Summary
     private inner class CategorySummaryAdapter : RecyclerView.Adapter<CategorySummaryAdapter.ViewHolder>() {
