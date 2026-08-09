@@ -68,7 +68,7 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
             android.util.Log.d("ExpenseTracker", "Getting database instance...")
             val database = ExpenseDatabase.getDatabase(application)
             
-            android:util.Log.d("ExpenseTracker", "Getting DAOs...")
+            android.util.Log.d("ExpenseTracker", "Getting DAOs...")
             val expenseDao = database.expenseDao()
             val categoryDao = database.categoryDao()
             val bankUpiDao = database.bankUpiDao()
