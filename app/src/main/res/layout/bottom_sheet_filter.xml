@@ -246,6 +246,23 @@
 
             </com.google.android.material.chip.ChipGroup>
 
+            <!-- Expense Sources -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🏪 Source of Expense"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="?android:textColorPrimary"
+                android:layout_marginBottom="12dp" />
+
+            <LinearLayout
+                android:id="@+id/layoutExpenseSources"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="24dp" />
+
             <!-- Categories -->
             <TextView
                 android:layout_width="wrap_content"

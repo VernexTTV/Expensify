@@ -216,6 +216,7 @@ class MainActivity : AppCompatActivity() {
         val cbCash: com.google.android.material.chip.Chip = dialogView.findViewById(R.id.cbCash)
         
         // Dynamic checkbox containers
+        val layoutExpenseSources: LinearLayout = dialogView.findViewById(R.id.layoutExpenseSources)
         val layoutCategories: LinearLayout = dialogView.findViewById(R.id.layoutCategories)
         
         // Action buttons
@@ -360,7 +361,29 @@ class MainActivity : AppCompatActivity() {
         }
         
         // Store checkbox references
+        val expenseSourceCheckboxes = mutableMapOf<Long, CheckBox>()
         val categoryCheckboxes = mutableMapOf<Long, CheckBox>()
+        
+        // Auto-populate expense sources from database
+        viewModel.allExpenseSources.observe(this) { sourceList ->
+            layoutExpenseSources.removeAllViews()
+            expenseSourceCheckboxes.clear()
+            
+            sourceList.forEach { source ->
+                val checkbox = CheckBox(this)
+                checkbox.text = source.name
+                checkbox.layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                
+                // Pre-check if this source was previously selected
+                checkbox.isChecked = currentFilterState?.expenseSourceIds?.contains(source.id) == true
+                
+                expenseSourceCheckboxes[source.id] = checkbox
+                layoutExpenseSources.addView(checkbox)
+            }
+        }
         
         // Auto-populate categories from database
         viewModel.allCategories.observe(this) { categoryList ->
@@ -454,6 +477,9 @@ class MainActivity : AppCompatActivity() {
             if (cbUpi.isChecked) selectedPaymentModes.add(PaymentMode.UPI)
             if (cbCash.isChecked) selectedPaymentModes.add(PaymentMode.CASH)
             
+            // Get selected expense sources
+            val selectedExpenseSourceIds = expenseSourceCheckboxes.filter { it.value.isChecked }.keys.toList()
+            
             // Get selected categories
             val selectedCategoryIds = categoryCheckboxes.filter { it.value.isChecked }.keys.toList()
             
@@ -469,6 +495,7 @@ class MainActivity : AppCompatActivity() {
                 finalEndDate,
                 selectedPaymentModes,
                 selectedCategoryIds,
+                selectedExpenseSourceIds,
                 monthForState,
                 yearForState
             )
@@ -486,11 +513,12 @@ class MainActivity : AppCompatActivity() {
         endDate: Long?,
         paymentModes: List<PaymentMode>,
         categoryIds: List<Long>,
+        expenseSourceIds: List<Long>,
         selectedMonth: Int?,
         selectedYear: Int?
     ) {
         // Use ViewModel's applyFilters method - no memory leak!
-        viewModel.applyFilters(minAmount, maxAmount, startDate, endDate, paymentModes, categoryIds, selectedMonth, selectedYear)
+        viewModel.applyFilters(minAmount, maxAmount, startDate, endDate, paymentModes, categoryIds, expenseSourceIds, selectedMonth, selectedYear)
         
         Toast.makeText(this, "Filters applied", Toast.LENGTH_SHORT).show()
     }

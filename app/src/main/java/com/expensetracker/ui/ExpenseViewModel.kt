@@ -40,6 +40,7 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
         val endDate: Long? = null,
         val paymentModes: List<PaymentMode> = emptyList(),
         val categoryIds: List<Long> = emptyList(),
+        val expenseSourceIds: List<Long> = emptyList(),
         val selectedMonth: Int? = null, // 0 = All, 1-12 = Jan-Dec
         val selectedYear: Int? = null   // Year number or null for "All"
     )
@@ -301,13 +302,14 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
         endDate: Long?,
         paymentModes: List<PaymentMode>,
         categoryIds: List<Long>,
+        expenseSourceIds: List<Long>,
         selectedMonth: Int?,
         selectedYear: Int?
     ) {
         _isLoading.value = true
         
-        // Save filter state including month/year
-        _filterState.value = FilterState(minAmount, maxAmount, startDate, endDate, paymentModes, categoryIds, selectedMonth, selectedYear)
+        // Save filter state including month/year and expense sources
+        _filterState.value = FilterState(minAmount, maxAmount, startDate, endDate, paymentModes, categoryIds, expenseSourceIds, selectedMonth, selectedYear)
         
         // For complex multi-select filters, we need client-side filtering
         // because Room doesn't support IN clauses with LiveData easily
@@ -343,6 +345,11 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
                 filtered = filtered.filter { it.categoryId in categoryIds }
             }
             
+            // Filter by expense sources
+            if (expenseSourceIds.isNotEmpty()) {
+                filtered = filtered.filter { it.expenseSourceId in expenseSourceIds }
+            }
+            
             filtered
         }
         
@@ -370,7 +377,8 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
                state.startDate != null || 
                state.endDate != null || 
                state.paymentModes.isNotEmpty() || 
-               state.categoryIds.isNotEmpty()
+               state.categoryIds.isNotEmpty() ||
+               state.expenseSourceIds.isNotEmpty()
     }
     
     data class CategorySummary(
