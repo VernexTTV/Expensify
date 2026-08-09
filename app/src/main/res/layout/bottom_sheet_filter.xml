@@ -33,7 +33,7 @@
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:maxHeight="380dp"
+        android:maxHeight="480dp"
         android:clipToPadding="false"
         android:fillViewport="false">
 
@@ -280,8 +280,8 @@
         android:gravity="end"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
-        android:paddingTop="20dp"
-        android:paddingBottom="40dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp"
         android:background="?attr/colorSurface"
         android:elevation="8dp">
 
