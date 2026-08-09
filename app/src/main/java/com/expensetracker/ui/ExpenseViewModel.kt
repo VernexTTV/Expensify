@@ -17,12 +17,14 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
     private val categoryRepository: CategoryRepository
     private val bankUpiRepository: BankUpiRepository
     private val expenseSourceRepository: ExpenseSourceRepository
+    private val paymentMethodRepository: PaymentMethodRepository
     
     val allExpenses: LiveData<List<Expense>>
     val totalExpenses: LiveData<Double?>
     val allCategories: LiveData<List<Category>>
     val allBankUpi: LiveData<List<BankUpi>>
     val allExpenseSources: LiveData<List<ExpenseSource>>
+    val allPaymentMethods: LiveData<List<PaymentMethod>>
     
     // Error handling
     private val _errorMessage = MutableLiveData<String?>()
@@ -38,7 +40,7 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
         val maxAmount: Double? = null,
         val startDate: Long? = null,
         val endDate: Long? = null,
-        val paymentModes: List<PaymentMode> = emptyList(),
+        val paymentMethodIds: List<Long> = emptyList(),
         val categoryIds: List<Long> = emptyList(),
         val expenseSourceIds: List<Long> = emptyList(),
         val selectedMonth: Int? = null, // 0 = All, 1-12 = Jan-Dec
@@ -66,17 +68,19 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
             android.util.Log.d("ExpenseTracker", "Getting database instance...")
             val database = ExpenseDatabase.getDatabase(application)
             
-            android.util.Log.d("ExpenseTracker", "Getting DAOs...")
+            android:util.Log.d("ExpenseTracker", "Getting DAOs...")
             val expenseDao = database.expenseDao()
             val categoryDao = database.categoryDao()
             val bankUpiDao = database.bankUpiDao()
             val expenseSourceDao = database.expenseSourceDao()
+            val paymentMethodDao = database.paymentMethodDao()
             
             android.util.Log.d("ExpenseTracker", "Creating repositories...")
             repository = ExpenseRepository(expenseDao)
             categoryRepository = CategoryRepository(categoryDao)
             bankUpiRepository = BankUpiRepository(bankUpiDao)
             expenseSourceRepository = ExpenseSourceRepository(expenseSourceDao)
+            paymentMethodRepository = PaymentMethodRepository(paymentMethodDao)
             
             android.util.Log.d("ExpenseTracker", "Setting up LiveData...")
             allExpenses = repository.allExpenses
@@ -84,6 +88,7 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
             allCategories = categoryRepository.allCategories
             allBankUpi = bankUpiRepository.allBankUpi
             allExpenseSources = expenseSourceRepository.allExpenseSources
+            allPaymentMethods = paymentMethodRepository.allPaymentMethods
             
             // Initialize with all expenses by default
             _currentExpenses.value = allExpenses
@@ -294,13 +299,44 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
         }
     }
     
+    // PaymentMethod operations with error handling
+    fun insertPaymentMethod(paymentMethod: PaymentMethod) = viewModelScope.launch(Dispatchers.IO) {
+        try {
+            paymentMethodRepository.insert(paymentMethod)
+            _errorMessage.postValue(null)
+        } catch (e: Exception) {
+            android.util.Log.e("ExpenseTracker", "Error inserting payment method", e)
+            _errorMessage.postValue("Failed to add payment method: ${e.message}")
+        }
+    }
+    
+    fun updatePaymentMethod(paymentMethod: PaymentMethod) = viewModelScope.launch(Dispatchers.IO) {
+        try {
+            paymentMethodRepository.update(paymentMethod)
+            _errorMessage.postValue(null)
+        } catch (e: Exception) {
+            android.util.Log.e("ExpenseTracker", "Error updating payment method", e)
+            _errorMessage.postValue("Failed to update payment method: ${e.message}")
+        }
+    }
+    
+    fun deletePaymentMethod(paymentMethod: PaymentMethod) = viewModelScope.launch(Dispatchers.IO) {
+        try {
+            paymentMethodRepository.delete(paymentMethod)
+            _errorMessage.postValue(null)
+        } catch (e: Exception) {
+            android.util.Log.e("ExpenseTracker", "Error deleting payment method", e)
+            _errorMessage.postValue("Failed to delete payment method: ${e.message}")
+        }
+    }
+    
     // Multi-criteria filter with client-side filtering for complex scenarios
     fun applyFilters(
         minAmount: Double?,
         maxAmount: Double?,
         startDate: Long?,
         endDate: Long?,
-        paymentModes: List<PaymentMode>,
+        paymentMethodIds: List<Long>,
         categoryIds: List<Long>,
         expenseSourceIds: List<Long>,
         selectedMonth: Int?,
@@ -309,7 +345,7 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
         _isLoading.value = true
         
         // Save filter state including month/year and expense sources
-        _filterState.value = FilterState(minAmount, maxAmount, startDate, endDate, paymentModes, categoryIds, expenseSourceIds, selectedMonth, selectedYear)
+        _filterState.value = FilterState(minAmount, maxAmount, startDate, endDate, paymentMethodIds, categoryIds, expenseSourceIds, selectedMonth, selectedYear)
         
         // For complex multi-select filters, we need client-side filtering
         // because Room doesn't support IN clauses with LiveData easily
@@ -336,8 +372,8 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
             }
             
             // Filter by payment modes
-            if (paymentModes.isNotEmpty()) {
-                filtered = filtered.filter { it.paymentMode in paymentModes }
+            if (paymentMethodIds.isNotEmpty()) {
+                filtered = filtered.filter { it.paymentMethodId in paymentMethodIds }
             }
             
             // Filter by categories
@@ -376,7 +412,7 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
                state.maxAmount != null || 
                state.startDate != null || 
                state.endDate != null || 
-               state.paymentModes.isNotEmpty() || 
+               state.paymentMethodIds.isNotEmpty() || 
                state.categoryIds.isNotEmpty() ||
                state.expenseSourceIds.isNotEmpty()
     }

@@ -9,14 +9,14 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.expensetracker.R
 import com.expensetracker.data.Expense
-import com.expensetracker.data.PaymentMode
 import java.text.SimpleDateFormat
 import java.util.*
 
 class ExpenseAdapter(
     private val onEditClick: (Expense) -> Unit,
     private val onDeleteClick: (Expense) -> Unit,
-    private val getCategoryName: (Long?) -> String? = { null }
+    private val getCategoryName: (Long?) -> String? = { null },
+    private val getPaymentMethodName: (Long?) -> String? = { null }
 ) : ListAdapter<Expense, ExpenseAdapter.ExpenseViewHolder>(ExpenseDiffCallback()) {
     
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ExpenseViewHolder {
@@ -27,7 +27,7 @@ class ExpenseAdapter(
     
     override fun onBindViewHolder(holder: ExpenseViewHolder, position: Int) {
         val expense = getItem(position)
-        holder.bind(expense, onEditClick, onDeleteClick, getCategoryName)
+        holder.bind(expense, onEditClick, onDeleteClick, getCategoryName, getPaymentMethodName)
     }
     
     class ExpenseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -44,7 +44,8 @@ class ExpenseAdapter(
             expense: Expense, 
             onEditClick: (Expense) -> Unit, 
             onDeleteClick: (Expense) -> Unit,
-            getCategoryName: (Long?) -> String?
+            getCategoryName: (Long?) -> String?,
+            getPaymentMethodName: (Long?) -> String?
         ) {
             val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
             dateText.text = dateFormat.format(Date(expense.date))
@@ -59,19 +60,16 @@ class ExpenseAdapter(
                 categoryText.visibility = View.GONE
             }
             
-            val paymentModeDisplay = when(expense.paymentMode) {
-                PaymentMode.CREDIT_CARD -> "Credit Card"
-                PaymentMode.DEBIT_CARD -> "Debit Card"
-                PaymentMode.UPI -> "UPI"
-                PaymentMode.CASH -> "Cash"
-            }
-            paymentModeText.text = paymentModeDisplay
+            // Show payment method name
+            val paymentMethodDisplay = getPaymentMethodName(expense.paymentMethodId) ?: "Unknown"
+            paymentModeText.text = paymentMethodDisplay
             
-            // Show bank or UPI details
-            val details = when(expense.paymentMode) {
-                PaymentMode.CREDIT_CARD, PaymentMode.DEBIT_CARD -> expense.bankName ?: ""
-                PaymentMode.UPI -> expense.upiApp ?: ""
-                PaymentMode.CASH -> ""
+            // Show bank or UPI details based on payment method name
+            val details = when {
+                paymentMethodDisplay.contains("Credit", ignoreCase = true) || 
+                paymentMethodDisplay.contains("Debit", ignoreCase = true) -> expense.bankName ?: ""
+                paymentMethodDisplay.contains("UPI", ignoreCase = true) -> expense.upiApp ?: ""
+                else -> ""
             }
             
             if (details.isNotEmpty()) {

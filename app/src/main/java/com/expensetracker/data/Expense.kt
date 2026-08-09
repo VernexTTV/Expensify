@@ -10,7 +10,7 @@ import java.util.Date
     indices = [
         Index(value = ["date"]),
         Index(value = ["categoryId"]),
-        Index(value = ["paymentMode"]),
+        Index(value = ["paymentMethodId"]),
         Index(value = ["date", "categoryId"])
     ]
 )
@@ -19,7 +19,7 @@ data class Expense(
     val id: Long = 0,
     val date: Long, // Timestamp
     val amount: Double,
-    val paymentMode: PaymentMode,
+    val paymentMethodId: Long? = null, // Foreign key to PaymentMethod
     val categoryId: Long? = null, // Foreign key to Category
     val bankName: String? = null, // For Credit Card or Debit Card
     val upiApp: String? = null, // For UPI
@@ -27,6 +27,7 @@ data class Expense(
     val description: String? = null // Optional note
 )
 
+// Keep enum for migration purposes only - will be removed after migration
 enum class PaymentMode {
     CREDIT_CARD,
     DEBIT_CARD,

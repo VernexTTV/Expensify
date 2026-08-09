@@ -8,7 +8,7 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [Expense::class, Category::class, BankUpi::class, ExpenseSource::class], version = 4, exportSchema = false)
+@Database(entities = [Expense::class, Category::class, BankUpi::class, ExpenseSource::class, PaymentMethod::class], version = 5, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class ExpenseDatabase : RoomDatabase() {
     
@@ -16,6 +16,7 @@ abstract class ExpenseDatabase : RoomDatabase() {
     abstract fun categoryDao(): CategoryDao
     abstract fun bankUpiDao(): BankUpiDao
     abstract fun expenseSourceDao(): ExpenseSourceDao
+    abstract fun paymentMethodDao(): PaymentMethodDao
     
     companion object {
         @Volatile
@@ -77,6 +78,66 @@ abstract class ExpenseDatabase : RoomDatabase() {
             }
         }
         
+        // Migration from version 4 to version 5
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Create payment_methods table
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `payment_methods` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `name` TEXT NOT NULL
+                    )
+                """)
+                
+                // Insert default payment methods with specific IDs matching the enum ordinals
+                database.execSQL("INSERT INTO `payment_methods` (`id`, `name`) VALUES (1, 'Credit Card')")
+                database.execSQL("INSERT INTO `payment_methods` (`id`, `name`) VALUES (2, 'Debit Card')")
+                database.execSQL("INSERT INTO `payment_methods` (`id`, `name`) VALUES (3, 'UPI')")
+                database.execSQL("INSERT INTO `payment_methods` (`id`, `name`) VALUES (4, 'Cash')")
+                
+                // Add paymentMethodId column to expenses table (nullable initially)
+                database.execSQL("ALTER TABLE expenses ADD COLUMN paymentMethodId INTEGER")
+                
+                // Migrate existing paymentMode enum values to paymentMethodId
+                // CREDIT_CARD (0) -> 1, DEBIT_CARD (1) -> 2, UPI (2) -> 3, CASH (3) -> 4
+                database.execSQL("UPDATE expenses SET paymentMethodId = CASE paymentMode WHEN 0 THEN 1 WHEN 1 THEN 2 WHEN 2 THEN 3 WHEN 3 THEN 4 END")
+                
+                // Create a new expenses table without paymentMode column
+                database.execSQL("""
+                    CREATE TABLE expenses_new (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        date INTEGER NOT NULL,
+                        amount REAL NOT NULL,
+                        paymentMethodId INTEGER,
+                        categoryId INTEGER,
+                        bankName TEXT,
+                        upiApp TEXT,
+                        expenseSourceId INTEGER,
+                        description TEXT
+                    )
+                """)
+                
+                // Copy data from old table to new table
+                database.execSQL("""
+                    INSERT INTO expenses_new (id, date, amount, paymentMethodId, categoryId, bankName, upiApp, expenseSourceId, description)
+                    SELECT id, date, amount, paymentMethodId, categoryId, bankName, upiApp, expenseSourceId, description
+                    FROM expenses
+                """)
+                
+                // Drop old table
+                database.execSQL("DROP TABLE expenses")
+                
+                // Rename new table to expenses
+                database.execSQL("ALTER TABLE expenses_new RENAME TO expenses")
+                
+                // Recreate indexes
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_expenses_date` ON `expenses` (`date`)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_expenses_categoryId` ON `expenses` (`categoryId`)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_expenses_paymentMethodId` ON `expenses` (`paymentMethodId`)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_expenses_date_categoryId` ON `expenses` (`date`, `categoryId`)")
+            }
+        }
+        
         fun getDatabase(context: Context): ExpenseDatabase {
             android.util.Log.d("ExpenseTracker", "=== Database getDatabase START ===")
             return INSTANCE ?: synchronized(this) {
@@ -104,7 +165,7 @@ abstract class ExpenseDatabase : RoomDatabase() {
                         ExpenseDatabase::class.java,
                         "expense_database_v2"
                     )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                     .fallbackToDestructiveMigration()
                     .build()
                     

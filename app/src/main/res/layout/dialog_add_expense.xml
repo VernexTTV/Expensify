@@ -110,20 +110,38 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="💳 Payment Mode"
+            android:text="💳 Payment Method"
             android:textStyle="bold"
             android:textSize="16sp"
             android:textColor="@color/timeless_text_primary"
             android:fontFamily="sans-serif-medium"
             android:layout_marginBottom="12dp" />
 
-        <Spinner
-            android:id="@+id/spinnerPaymentMode"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:background="@drawable/bg_spinner_outline"
-            android:padding="12dp"
-            android:layout_marginBottom="20dp" />
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="20dp">
+
+            <Spinner
+                android:id="@+id/spinnerPaymentMode"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_spinner_outline"
+                android:padding="12dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnManagePaymentMethods"
+                android:layout_width="wrap_content"
+                android:layout_height="56dp"
+                android:text="Manage"
+                android:textAllCaps="false"
+                android:textColor="@color/teal_accent"
+                android:layout_marginStart="8dp"
+                style="@style/Widget.Material3.Button.TextButton" />
+
+        </LinearLayout>
 
         <!-- Bank/UPI Section -->
         <LinearLayout

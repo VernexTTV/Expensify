@@ -34,6 +34,7 @@ class MainActivity : AppCompatActivity() {
     private var categories: List<Category> = emptyList()
     private var bankUpiList: List<BankUpi> = emptyList()
     private var expenseSourceList: List<ExpenseSource> = emptyList()
+    private var paymentMethodList: List<PaymentMethod> = emptyList()
     
     override fun onCreate(savedInstanceState: Bundle?) {
         android.util.Log.d("ExpenseTracker", "=== MainActivity onCreate START ===")
@@ -69,6 +70,11 @@ class MainActivity : AppCompatActivity() {
                 getCategoryName = { categoryId ->
                     categoryId?.let { id ->
                         categories.find { it.id == id }?.name
+                    }
+                },
+                getPaymentMethodName = { paymentMethodId ->
+                    paymentMethodId?.let { id ->
+                        paymentMethodList.find { it.id == id }?.name
                     }
                 }
             )
@@ -166,6 +172,12 @@ class MainActivity : AppCompatActivity() {
                 expenseSourceList = list
             }
             
+            android.util.Log.d("ExpenseTracker", "Step 14.6: Observe payment methods")
+            // Observe payment methods
+            viewModel.allPaymentMethods.observe(this) { list ->
+                paymentMethodList = list
+            }
+            
             android.util.Log.d("ExpenseTracker", "Step 15: Setup FAB")
             // Setup FAB
             fabAdd.setOnClickListener {
@@ -209,13 +221,8 @@ class MainActivity : AppCompatActivity() {
         val spinnerMonth: android.widget.Spinner = dialogView.findViewById(R.id.spinnerMonth)
         val spinnerYear: android.widget.Spinner = dialogView.findViewById(R.id.spinnerYear)
         
-        // Payment method chips
-        val cbCreditCard: com.google.android.material.chip.Chip = dialogView.findViewById(R.id.cbCreditCard)
-        val cbDebitCard: com.google.android.material.chip.Chip = dialogView.findViewById(R.id.cbDebitCard)
-        val cbUpi: com.google.android.material.chip.Chip = dialogView.findViewById(R.id.cbUpi)
-        val cbCash: com.google.android.material.chip.Chip = dialogView.findViewById(R.id.cbCash)
-        
         // Dynamic checkbox containers
+        val layoutPaymentMethods: LinearLayout = dialogView.findViewById(R.id.layoutPaymentMethods)
         val layoutExpenseSources: LinearLayout = dialogView.findViewById(R.id.layoutExpenseSources)
         val layoutCategories: LinearLayout = dialogView.findViewById(R.id.layoutCategories)
         
@@ -361,8 +368,30 @@ class MainActivity : AppCompatActivity() {
         }
         
         // Store checkbox references
+        val paymentMethodCheckboxes = mutableMapOf<Long, CheckBox>()
         val expenseSourceCheckboxes = mutableMapOf<Long, CheckBox>()
         val categoryCheckboxes = mutableMapOf<Long, CheckBox>()
+        
+        // Auto-populate payment methods from database
+        viewModel.allPaymentMethods.observe(this) { methodList ->
+            layoutPaymentMethods.removeAllViews()
+            paymentMethodCheckboxes.clear()
+            
+            methodList.forEach { method ->
+                val checkbox = CheckBox(this)
+                checkbox.text = method.name
+                checkbox.layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                
+                // Pre-check if this method was previously selected
+                checkbox.isChecked = currentFilterState?.paymentMethodIds?.contains(method.id) == true
+                
+                paymentMethodCheckboxes[method.id] = checkbox
+                layoutPaymentMethods.addView(checkbox)
+            }
+        }
         
         // Auto-populate expense sources from database
         viewModel.allExpenseSources.observe(this) { sourceList ->
@@ -470,12 +499,8 @@ class MainActivity : AppCompatActivity() {
             val finalStartDate = monthStartDate ?: selectedStartDate
             val finalEndDate = monthEndDate ?: selectedEndDate
             
-            // Get selected payment modes
-            val selectedPaymentModes = mutableListOf<PaymentMode>()
-            if (cbCreditCard.isChecked) selectedPaymentModes.add(PaymentMode.CREDIT_CARD)
-            if (cbDebitCard.isChecked) selectedPaymentModes.add(PaymentMode.DEBIT_CARD)
-            if (cbUpi.isChecked) selectedPaymentModes.add(PaymentMode.UPI)
-            if (cbCash.isChecked) selectedPaymentModes.add(PaymentMode.CASH)
+            // Get selected payment methods
+            val selectedPaymentMethodIds = paymentMethodCheckboxes.filter { it.value.isChecked }.keys.toList()
             
             // Get selected expense sources
             val selectedExpenseSourceIds = expenseSourceCheckboxes.filter { it.value.isChecked }.keys.toList()
@@ -493,7 +518,7 @@ class MainActivity : AppCompatActivity() {
                 maxAmount,
                 finalStartDate,
                 finalEndDate,
-                selectedPaymentModes,
+                selectedPaymentMethodIds,
                 selectedCategoryIds,
                 selectedExpenseSourceIds,
                 monthForState,
@@ -511,14 +536,14 @@ class MainActivity : AppCompatActivity() {
         maxAmount: Double?,
         startDate: Long?,
         endDate: Long?,
-        paymentModes: List<PaymentMode>,
+        paymentMethodIds: List<Long>,
         categoryIds: List<Long>,
         expenseSourceIds: List<Long>,
         selectedMonth: Int?,
         selectedYear: Int?
     ) {
         // Use ViewModel's applyFilters method - no memory leak!
-        viewModel.applyFilters(minAmount, maxAmount, startDate, endDate, paymentModes, categoryIds, expenseSourceIds, selectedMonth, selectedYear)
+        viewModel.applyFilters(minAmount, maxAmount, startDate, endDate, paymentMethodIds, categoryIds, expenseSourceIds, selectedMonth, selectedYear)
         
         Toast.makeText(this, "Filters applied", Toast.LENGTH_SHORT).show()
     }
@@ -786,6 +811,84 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
     
+    private fun showManagePaymentMethodsDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_manage_payment_methods, null)
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .create()
+        
+        val paymentMethodNameEdit: EditText = dialogView.findViewById(R.id.etPaymentMethodName)
+        val btnAddPaymentMethod: Button = dialogView.findViewById(R.id.btnAddPaymentMethod)
+        val rvPaymentMethods: RecyclerView = dialogView.findViewById(R.id.rvPaymentMethods)
+        val btnClose: Button = dialogView.findViewById(R.id.btnClosePaymentMethod)
+        
+        // Setup RecyclerView for payment methods
+        val paymentMethodAdapter = PaymentMethodAdapter(
+            onEditClick = { paymentMethod -> showEditPaymentMethodDialog(paymentMethod) },
+            onDeleteClick = { paymentMethod -> 
+                AlertDialog.Builder(this)
+                    .setTitle("Delete Payment Method")
+                    .setMessage("Are you sure you want to delete '${paymentMethod.name}'?")
+                    .setPositiveButton("Delete") { _, _ ->
+                        viewModel.deletePaymentMethod(paymentMethod)
+                        Toast.makeText(this, "Deleted successfully", Toast.LENGTH_SHORT).show()
+                    }
+                    .setNegativeButton("Cancel", null)
+                    .show()
+            }
+        )
+        
+        rvPaymentMethods.adapter = paymentMethodAdapter
+        rvPaymentMethods.layoutManager = LinearLayoutManager(this)
+        
+        // Observe payment methods
+        viewModel.allPaymentMethods.observe(this) { list ->
+            paymentMethodAdapter.submitList(list)
+        }
+        
+        btnAddPaymentMethod.setOnClickListener {
+            val name = paymentMethodNameEdit.text.toString().trim()
+            if (name.isEmpty()) {
+                Toast.makeText(this, "Please enter name", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            
+            val paymentMethod = PaymentMethod(name = name)
+            viewModel.insertPaymentMethod(paymentMethod)
+            paymentMethodNameEdit.text.clear()
+            Toast.makeText(this, "Added successfully", Toast.LENGTH_SHORT).show()
+        }
+        
+        btnClose.setOnClickListener {
+            dialog.dismiss()
+        }
+        
+        dialog.show()
+    }
+    
+    private fun showEditPaymentMethodDialog(paymentMethod: PaymentMethod) {
+        val editText = EditText(this)
+        editText.setText(paymentMethod.name)
+        editText.hint = "Name"
+        
+        AlertDialog.Builder(this)
+            .setTitle("Edit Payment Method")
+            .setView(editText)
+            .setPositiveButton("Save") { _, _ ->
+                val newName = editText.text.toString().trim()
+                if (newName.isEmpty()) {
+                    Toast.makeText(this, "Name cannot be empty", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+                
+                val updated = paymentMethod.copy(name = newName)
+                viewModel.updatePaymentMethod(updated)
+                Toast.makeText(this, "Updated successfully", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+    
     private fun showAddEditDialog(expense: Expense?) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_add_expense, null)
         val dialog = AlertDialog.Builder(this)
@@ -865,16 +968,46 @@ class MainActivity : AppCompatActivity() {
             showManageCategoriesDialog()
         }
         
-        // Setup payment mode spinner
-        val paymentModes = arrayOf("Credit Card", "Debit Card", "UPI", "Cash")
-        val paymentModeAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, paymentModes)
-        paymentModeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        paymentModeSpinner.adapter = paymentModeAdapter
+        // Setup payment method spinner with manage button
+        val btnManagePaymentMethods: Button = dialogView.findViewById(R.id.btnManagePaymentMethods)
         
-        // Function to update bank/UPI spinner based on payment mode
-        fun updateBankUpiSpinner(paymentMode: PaymentMode) {
-            when (paymentMode) {
-                PaymentMode.CREDIT_CARD, PaymentMode.DEBIT_CARD -> {
+        fun refreshPaymentMethodSpinner() {
+            val methodNames = paymentMethodList.map { it.name }
+            val methodAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, methodNames)
+            methodAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            paymentModeSpinner.adapter = methodAdapter
+            
+            // Pre-select payment method if editing
+            if (expense?.paymentMethodId != null) {
+                val methodIndex = paymentMethodList.indexOfFirst { it.id == expense.paymentMethodId }
+                if (methodIndex >= 0) {
+                    paymentModeSpinner.setSelection(methodIndex)
+                }
+            }
+        }
+        
+        // Initial setup
+        refreshPaymentMethodSpinner()
+        
+        // Observe payment method changes to refresh spinner in real-time
+        viewModel.allPaymentMethods.observe(this) { list ->
+            paymentMethodList = list
+            val currentSelection = paymentModeSpinner.selectedItemPosition
+            refreshPaymentMethodSpinner()
+            // Try to maintain selection if possible
+            if (currentSelection < paymentMethodList.size) {
+                paymentModeSpinner.setSelection(currentSelection)
+            }
+        }
+        
+        btnManagePaymentMethods.setOnClickListener {
+            showManagePaymentMethodsDialog()
+        }
+        
+        // Function to update bank/UPI spinner based on payment method name
+        fun updateBankUpiSpinner(paymentMethodName: String) {
+            when {
+                paymentMethodName.contains("Credit", ignoreCase = true) || paymentMethodName.contains("Debit", ignoreCase = true) -> {
                     bankUpiLayout.visibility = View.VISIBLE
                     bankUpiLabel.text = "Bank Name"
                     
@@ -894,7 +1027,7 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 }
-                PaymentMode.UPI -> {
+                paymentMethodName.contains("UPI", ignoreCase = true) -> {
                     bankUpiLayout.visibility = View.VISIBLE
                     bankUpiLabel.text = "UPI App"
                     
@@ -914,7 +1047,7 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 }
-                PaymentMode.CASH -> {
+                else -> {
                     bankUpiLayout.visibility = View.GONE
                 }
             }
@@ -923,14 +1056,18 @@ class MainActivity : AppCompatActivity() {
         // Observe bank/UPI changes to refresh spinner in real-time
         viewModel.allBankUpi.observe(this) { list ->
             bankUpiList = list
-            // Refresh current spinner based on selected payment mode
-            val currentPaymentMode = PaymentMode.values()[paymentModeSpinner.selectedItemPosition]
-            updateBankUpiSpinner(currentPaymentMode)
+            // Refresh current spinner based on selected payment method
+            if (paymentMethodList.isNotEmpty() && paymentModeSpinner.selectedItemPosition >= 0 && paymentModeSpinner.selectedItemPosition < paymentMethodList.size) {
+                val currentMethod = paymentMethodList[paymentModeSpinner.selectedItemPosition]
+                updateBankUpiSpinner(currentMethod.name)
+            }
         }
         
         paymentModeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                updateBankUpiSpinner(PaymentMode.values()[position])
+                if (position >= 0 && position < paymentMethodList.size) {
+                    updateBankUpiSpinner(paymentMethodList[position].name)
+                }
             }
             
             override fun onNothingSelected(parent: AdapterView<*>?) {}
@@ -973,7 +1110,7 @@ class MainActivity : AppCompatActivity() {
         // Pre-fill if editing
         if (expense != null) {
             amountEdit.setText(expense.amount.toString())
-            paymentModeSpinner.setSelection(expense.paymentMode.ordinal)
+            // Payment method selection is handled in refreshPaymentMethodSpinner()
             descriptionEdit.setText(expense.description ?: "")
         }
         
@@ -1027,18 +1164,30 @@ class MainActivity : AppCompatActivity() {
                 null
             }
             
-            val paymentMode = PaymentMode.values()[paymentModeSpinner.selectedItemPosition]
+            // Get selected payment method
+            val paymentMethodId = if (paymentModeSpinner.selectedItemPosition >= 0 && paymentModeSpinner.selectedItemPosition < paymentMethodList.size) {
+                paymentMethodList[paymentModeSpinner.selectedItemPosition].id
+            } else {
+                null
+            }
+            
+            val paymentMethodName = if (paymentModeSpinner.selectedItemPosition >= 0 && paymentModeSpinner.selectedItemPosition < paymentMethodList.size) {
+                paymentMethodList[paymentModeSpinner.selectedItemPosition].name
+            } else {
+                ""
+            }
+            
             var bankName: String? = null
             var upiApp: String? = null
             
-            // Get bank/UPI value if applicable
-            if (paymentMode in arrayOf(PaymentMode.CREDIT_CARD, PaymentMode.DEBIT_CARD)) {
+            // Get bank/UPI value if applicable (based on payment method name)
+            if (paymentMethodName.contains("Credit", ignoreCase = true) || paymentMethodName.contains("Debit", ignoreCase = true)) {
                 if (bankUpiSpinner.selectedItemPosition == 0) {
                     Toast.makeText(this, "Please select a bank", Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
                 bankName = bankUpiSpinner.selectedItem.toString()
-            } else if (paymentMode == PaymentMode.UPI) {
+            } else if (paymentMethodName.contains("UPI", ignoreCase = true)) {
                 if (bankUpiSpinner.selectedItemPosition == 0) {
                     Toast.makeText(this, "Please select a UPI app", Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
@@ -1057,7 +1206,7 @@ class MainActivity : AppCompatActivity() {
                 id = expense?.id ?: 0,
                 date = selectedDate,
                 amount = amount,
-                paymentMode = paymentMode,
+                paymentMethodId = paymentMethodId,
                 categoryId = categoryId,
                 bankName = bankName,
                 upiApp = upiApp,
@@ -1242,6 +1391,43 @@ class MainActivity : AppCompatActivity() {
                 tvName.text = expenseSource.name
                 btnEdit.setOnClickListener { onEditClick(expenseSource) }
                 btnDelete.setOnClickListener { onDeleteClick(expenseSource) }
+            }
+        }
+    }
+    
+    // Adapter for Payment Method list in management dialog
+    private inner class PaymentMethodAdapter(
+        private val onEditClick: (PaymentMethod) -> Unit,
+        private val onDeleteClick: (PaymentMethod) -> Unit
+    ) : RecyclerView.Adapter<PaymentMethodAdapter.ViewHolder>() {
+        
+        private var items: List<PaymentMethod> = emptyList()
+        
+        fun submitList(list: List<PaymentMethod>) {
+            items = list
+            notifyDataSetChanged()
+        }
+        
+        override fun onCreateViewHolder(parent: android.view.ViewGroup, viewType: Int): ViewHolder {
+            val view = layoutInflater.inflate(R.layout.item_payment_method, parent, false)
+            return ViewHolder(view)
+        }
+        
+        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+            holder.bind(items[position])
+        }
+        
+        override fun getItemCount() = items.size
+        
+        inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+            private val tvName: TextView = itemView.findViewById(R.id.tvPaymentMethodName)
+            private val btnEdit: ImageButton = itemView.findViewById(R.id.btnEditPaymentMethod)
+            private val btnDelete: ImageButton = itemView.findViewById(R.id.btnDeletePaymentMethod)
+            
+            fun bind(paymentMethod: PaymentMethod) {
+                tvName.text = paymentMethod.name
+                btnEdit.setOnClickListener { onEditClick(paymentMethod) }
+                btnDelete.setOnClickListener { onDeleteClick(paymentMethod) }
             }
         }
     }
