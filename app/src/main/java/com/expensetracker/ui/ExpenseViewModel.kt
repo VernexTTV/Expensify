@@ -194,8 +194,8 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
         return repository.getExpensesByDateRange(startDate, endDate)
     }
     
-    fun getExpensesByPaymentMode(mode: PaymentMode): LiveData<List<Expense>> {
-        return repository.getExpensesByPaymentMode(mode)
+    fun getExpensesByPaymentMethodId(paymentMethodId: Long): LiveData<List<Expense>> {
+        return repository.getExpensesByPaymentMethodId(paymentMethodId)
     }
     
     fun getTotalExpensesByDateRange(startDate: Long, endDate: Long): LiveData<Double?> {

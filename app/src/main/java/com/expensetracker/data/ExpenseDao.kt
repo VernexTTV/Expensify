@@ -17,8 +17,8 @@ interface ExpenseDao {
     @Query("SELECT * FROM expenses WHERE date BETWEEN :startDate AND :endDate ORDER BY date DESC")
     fun getExpensesByDateRange(startDate: Long, endDate: Long): LiveData<List<Expense>>
     
-    @Query("SELECT * FROM expenses WHERE paymentMode = :mode ORDER BY date DESC")
-    fun getExpensesByPaymentMode(mode: PaymentMode): LiveData<List<Expense>>
+    @Query("SELECT * FROM expenses WHERE paymentMethodId = :paymentMethodId ORDER BY date DESC")
+    fun getExpensesByPaymentMethodId(paymentMethodId: Long): LiveData<List<Expense>>
     
     @Query("SELECT * FROM expenses WHERE id = :expenseId")
     fun getExpenseById(expenseId: Long): Expense?
@@ -41,13 +41,13 @@ interface ExpenseDao {
     @Query("SELECT SUM(amount) FROM expenses WHERE date BETWEEN :startDate AND :endDate")
     fun getTotalExpensesByDateRange(startDate: Long, endDate: Long): LiveData<Double?>
     
-    // Single-select filtering methods
+    // Single-select filtering methods (kept for backward compatibility but not used with new payment method system)
     @Query("""
         SELECT * FROM expenses 
         WHERE (:startDate IS NULL OR date >= :startDate)
         AND (:endDate IS NULL OR date <= :endDate)
         AND (:categoryId IS NULL OR categoryId = :categoryId)
-        AND (:paymentMode IS NULL OR paymentMode = :paymentMode)
+        AND (:paymentMethodId IS NULL OR paymentMethodId = :paymentMethodId)
         AND (:bankName IS NULL OR bankName = :bankName)
         AND (:upiApp IS NULL OR upiApp = :upiApp)
         ORDER BY date DESC
@@ -56,7 +56,7 @@ interface ExpenseDao {
         startDate: Long?,
         endDate: Long?,
         categoryId: Long?,
-        paymentMode: PaymentMode?,
+        paymentMethodId: Long?,
         bankName: String?,
         upiApp: String?
     ): LiveData<List<Expense>>
@@ -66,7 +66,7 @@ interface ExpenseDao {
         WHERE (:startDate IS NULL OR date >= :startDate)
         AND (:endDate IS NULL OR date <= :endDate)
         AND (:categoryId IS NULL OR categoryId = :categoryId)
-        AND (:paymentMode IS NULL OR paymentMode = :paymentMode)
+        AND (:paymentMethodId IS NULL OR paymentMethodId = :paymentMethodId)
         AND (:bankName IS NULL OR bankName = :bankName)
         AND (:upiApp IS NULL OR upiApp = :upiApp)
     """)
@@ -74,7 +74,7 @@ interface ExpenseDao {
         startDate: Long?,
         endDate: Long?,
         categoryId: Long?,
-        paymentMode: PaymentMode?,
+        paymentMethodId: Long?,
         bankName: String?,
         upiApp: String?
     ): LiveData<Double?>

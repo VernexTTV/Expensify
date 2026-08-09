@@ -27,8 +27,8 @@ class ExpenseRepository(private val expenseDao: ExpenseDao) {
         return expenseDao.getExpensesByDateRange(startDate, endDate)
     }
     
-    fun getExpensesByPaymentMode(mode: PaymentMode): LiveData<List<Expense>> {
-        return expenseDao.getExpensesByPaymentMode(mode)
+    fun getExpensesByPaymentMethodId(paymentMethodId: Long): LiveData<List<Expense>> {
+        return expenseDao.getExpensesByPaymentMethodId(paymentMethodId)
     }
     
     fun getTotalExpensesByDateRange(startDate: Long, endDate: Long): LiveData<Double?> {
@@ -39,21 +39,21 @@ class ExpenseRepository(private val expenseDao: ExpenseDao) {
         startDate: Long?,
         endDate: Long?,
         categoryId: Long?,
-        paymentMode: PaymentMode?,
+        paymentMethodId: Long?,
         bankName: String?,
         upiApp: String?
     ): LiveData<List<Expense>> {
-        return expenseDao.getFilteredExpenses(startDate, endDate, categoryId, paymentMode, bankName, upiApp)
+        return expenseDao.getFilteredExpenses(startDate, endDate, categoryId, paymentMethodId, bankName, upiApp)
     }
     
     fun getFilteredTotal(
         startDate: Long?,
         endDate: Long?,
         categoryId: Long?,
-        paymentMode: PaymentMode?,
+        paymentMethodId: Long?,
         bankName: String?,
         upiApp: String?
     ): LiveData<Double?> {
-        return expenseDao.getFilteredTotal(startDate, endDate, categoryId, paymentMode, bankName, upiApp)
+        return expenseDao.getFilteredTotal(startDate, endDate, categoryId, paymentMethodId, bankName, upiApp)
     }
 }
