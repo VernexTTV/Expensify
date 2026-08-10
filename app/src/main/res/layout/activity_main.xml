@@ -99,7 +99,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                android:paddingVertical="4dp"
                 android:background="@drawable/timeless_card_bg"
                 android:elevation="2dp"
                 android:queryHint="Search by Amount, Category, Payment Method, UPI App/Bank or Description"

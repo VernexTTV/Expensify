@@ -198,25 +198,33 @@ class MainActivity : AppCompatActivity() {
             // Set hint text programmatically to ensure visibility
             searchView.queryHint = "Search by Amount, Category, Payment Method, UPI App/Bank or Description"
             
-            // Customize SearchView appearance
+            // Customize SearchView appearance - aggressive approach
             try {
+                // Remove padding from SearchView itself
+                searchView.setPadding(0, searchView.paddingTop, searchView.paddingRight, searchView.paddingBottom)
+                
+                // Get the search plate (the container of icon and text)
+                val searchPlate = searchView.findViewById<android.view.View>(androidx.appcompat.R.id.search_plate)
+                searchPlate?.setPadding(0, 0, 0, 0)
+                
                 // Get the search EditText
                 val searchEditText = searchView.findViewById<android.widget.EditText>(androidx.appcompat.R.id.search_src_text)
-                searchEditText?.textSize = 10f // Smaller text size to fit better
+                searchEditText?.textSize = 10f // Smaller text size
+                searchEditText?.setPaddingRelative(4, 0, 0, 0) // Minimal left padding
                 
-                // Get the search icon
+                // Get the search icon and remove all margins/padding
                 val searchIcon = searchView.findViewById<android.widget.ImageView>(androidx.appcompat.R.id.search_mag_icon)
                 searchIcon?.let {
-                    // Remove left margin/padding from icon
-                    val params = it.layoutParams as android.view.ViewGroup.MarginLayoutParams
-                    params.leftMargin = 0
-                    params.marginStart = 0
-                    it.layoutParams = params
                     it.setPadding(0, 0, 0, 0)
+                    val params = it.layoutParams as? android.view.ViewGroup.MarginLayoutParams
+                    params?.let { lp ->
+                        lp.leftMargin = 0
+                        lp.rightMargin = 0
+                        lp.marginStart = 0
+                        lp.marginEnd = 4 // Small gap between icon and text
+                        it.layoutParams = lp
+                    }
                 }
-                
-                // Adjust text field left padding to be closer to icon
-                searchEditText?.setPaddingRelative(8, 0, 0, 0)
                 
             } catch (e: Exception) {
                 android.util.Log.w("ExpenseTracker", "Could not customize SearchView", e)
