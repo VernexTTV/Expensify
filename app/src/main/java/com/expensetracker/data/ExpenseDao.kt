@@ -79,12 +79,15 @@ interface ExpenseDao {
         upiApp: String?
     ): LiveData<Double?>
     
-    // Search methods - searches by description, bank name, UPI app, payment method, and expense source
+    // Search methods - searches by amount, category, description, bank name, UPI app, payment method, and expense source
     @Query("""
         SELECT e.* FROM expenses e 
         LEFT JOIN payment_methods pm ON e.paymentMethodId = pm.id 
         LEFT JOIN expense_sources es ON e.expenseSourceId = es.id 
-        WHERE (e.bankName LIKE '%' || :query || '%' 
+        LEFT JOIN categories c ON e.categoryId = c.id 
+        WHERE (CAST(e.amount AS TEXT) LIKE '%' || :query || '%'
+        OR c.name LIKE '%' || :query || '%'
+        OR e.bankName LIKE '%' || :query || '%' 
         OR e.upiApp LIKE '%' || :query || '%' 
         OR e.description LIKE '%' || :query || '%'
         OR pm.name LIKE '%' || :query || '%'
@@ -97,7 +100,10 @@ interface ExpenseDao {
         SELECT SUM(e.amount) FROM expenses e 
         LEFT JOIN payment_methods pm ON e.paymentMethodId = pm.id 
         LEFT JOIN expense_sources es ON e.expenseSourceId = es.id 
-        WHERE (e.bankName LIKE '%' || :query || '%' 
+        LEFT JOIN categories c ON e.categoryId = c.id 
+        WHERE (CAST(e.amount AS TEXT) LIKE '%' || :query || '%'
+        OR c.name LIKE '%' || :query || '%'
+        OR e.bankName LIKE '%' || :query || '%' 
         OR e.upiApp LIKE '%' || :query || '%' 
         OR e.description LIKE '%' || :query || '%'
         OR pm.name LIKE '%' || :query || '%'
