@@ -103,10 +103,10 @@
                 android:paddingHorizontal="8dp"
                 android:background="@drawable/timeless_card_bg"
                 android:elevation="2dp"
-                android:queryHint="Search by Payment Method, UPI App/Bank Name or Description"
+                android:queryHint="Search by Payment Method, UPI App/Bank or Description"
                 app:iconifiedByDefault="false"
                 app:queryBackground="@android:color/transparent"
-                app:defaultQueryHint="Search by Payment Method, UPI App/Bank Name or Description" />
+                app:defaultQueryHint="Search by Payment Method, UPI App/Bank or Description" />
 
             <!-- Expenses List Header -->
             <TextView
