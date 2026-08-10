@@ -107,17 +107,6 @@
                 app:queryBackground="@android:color/transparent"
                 app:defaultQueryHint="Search by Amount, Category, Payment Method, UPI App/Bank or Description" />
 
-            <!-- Search info text -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Search by amount, category, payment method, bank/UPI or description"
-                android:textSize="10sp"
-                android:textColor="@color/timeless_text_tertiary"
-                android:layout_marginTop="4dp"
-                android:layout_marginStart="4dp"
-                android:fontFamily="sans-serif" />
-
             <!-- Expenses List Header -->
             <TextView
                 android:id="@+id/tvExpensesHeader"

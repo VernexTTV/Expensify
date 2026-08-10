@@ -198,10 +198,10 @@ class MainActivity : AppCompatActivity() {
             // Set hint text programmatically to ensure visibility
             searchView.queryHint = "Search by Amount, Category, Payment Method, UPI App/Bank or Description"
             
-            // Try to reduce the left padding/gap of search icon
+            // Make hint text smaller to fit better
             try {
                 val searchEditText = searchView.findViewById<android.widget.EditText>(androidx.appcompat.R.id.search_src_text)
-                searchEditText?.textSize = 12f // Smaller text size to fit better
+                searchEditText?.textSize = 10f // Even smaller text size to show full hint
                 searchEditText?.setPadding(0, 0, 0, 0)
             } catch (e: Exception) {
                 android.util.Log.w("ExpenseTracker", "Could not customize SearchView", e)
