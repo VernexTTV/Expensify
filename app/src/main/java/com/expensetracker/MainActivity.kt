@@ -196,7 +196,7 @@ class MainActivity : AppCompatActivity() {
             val searchView: androidx.appcompat.widget.SearchView = findViewById(R.id.searchView)
             
             // Set hint text programmatically to ensure visibility
-            searchView.queryHint = "Search by Payment Method, UPI App, Bank Name or Description"
+            searchView.queryHint = "Search by Payment Method, UPI App/Bank Name or Description"
             
             searchView.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
                 override fun onQueryTextSubmit(query: String?): Boolean {
