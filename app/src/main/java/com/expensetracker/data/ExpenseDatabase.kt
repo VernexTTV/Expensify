@@ -8,7 +8,7 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [Expense::class, Category::class, BankUpi::class, ExpenseSource::class, PaymentMethod::class], version = 5, exportSchema = false)
+@Database(entities = [Expense::class, Category::class, BankUpi::class, ExpenseSource::class, PaymentMethod::class], version = 6, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class ExpenseDatabase : RoomDatabase() {
     
@@ -138,6 +138,14 @@ abstract class ExpenseDatabase : RoomDatabase() {
             }
         }
         
+        // Migration from version 5 to version 6
+        private val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Add Wallets as a new payment method
+                database.execSQL("INSERT INTO `payment_methods` (`id`, `name`) VALUES (5, 'Wallets')")
+            }
+        }
+        
         fun getDatabase(context: Context): ExpenseDatabase {
             android.util.Log.d("ExpenseTracker", "=== Database getDatabase START ===")
             return INSTANCE ?: synchronized(this) {
@@ -165,7 +173,7 @@ abstract class ExpenseDatabase : RoomDatabase() {
                         ExpenseDatabase::class.java,
                         "expense_database_v2"
                     )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                     .fallbackToDestructiveMigration()
                     .build()
                     

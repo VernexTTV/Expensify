@@ -198,6 +198,15 @@ class MainActivity : AppCompatActivity() {
             // Set hint text programmatically to ensure visibility
             searchView.queryHint = "Search by Amount, Category, Payment Method, UPI App/Bank or Description"
             
+            // Try to reduce the left padding/gap of search icon
+            try {
+                val searchEditText = searchView.findViewById<android.widget.EditText>(androidx.appcompat.R.id.search_src_text)
+                searchEditText?.textSize = 12f // Smaller text size to fit better
+                searchEditText?.setPadding(0, 0, 0, 0)
+            } catch (e: Exception) {
+                android.util.Log.w("ExpenseTracker", "Could not customize SearchView", e)
+            }
+            
             searchView.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
                 override fun onQueryTextSubmit(query: String?): Boolean {
                     query?.let {
@@ -655,16 +664,22 @@ class MainActivity : AppCompatActivity() {
         val rgType: RadioGroup = dialogView.findViewById(R.id.rgBankUpiType)
         val rbBank: RadioButton = dialogView.findViewById(R.id.rbBank)
         val rbUpi: RadioButton = dialogView.findViewById(R.id.rbUpi)
+        val rbWallet: RadioButton = dialogView.findViewById(R.id.rbWallet)
         val rvBankUpi: RecyclerView = dialogView.findViewById(R.id.rvBankUpi)
         val btnClose: Button = dialogView.findViewById(R.id.btnCloseBankUpi)
         val tvExisting: TextView = dialogView.findViewById(R.id.tvExistingBankUpi)
         
-        // Setup RecyclerView for bank/UPI
+        // Setup RecyclerView for bank/UPI/Wallet
         val bankUpiAdapter = BankUpiAdapter(
             onEditClick = { bankUpi -> showEditBankUpiDialog(bankUpi) },
             onDeleteClick = { bankUpi -> 
+                val typeName = when (bankUpi.type) {
+                    BankUpiType.BANK -> "Bank"
+                    BankUpiType.UPI -> "UPI App"
+                    BankUpiType.WALLET -> "Wallet"
+                }
                 AlertDialog.Builder(this)
-                    .setTitle("Delete ${if (bankUpi.type == BankUpiType.BANK) "Bank" else "UPI App"}")
+                    .setTitle("Delete $typeName")
                     .setMessage("Are you sure you want to delete '${bankUpi.name}'?")
                     .setPositiveButton("Delete") { _, _ ->
                         viewModel.deleteBankUpi(bankUpi)
@@ -685,11 +700,21 @@ class MainActivity : AppCompatActivity() {
                 bankUpiAdapter.submitList(filteredList)
             }
             
-            // Update label
-            tvExisting.text = if (type == BankUpiType.BANK) "Existing Banks" else "Existing UPI Apps"
-            
-            // Update hint
-            bankUpiNameEdit.hint = if (type == BankUpiType.BANK) "Bank name" else "UPI App name"
+            // Update label and hint based on type
+            when (type) {
+                BankUpiType.BANK -> {
+                    tvExisting.text = "Existing Banks"
+                    bankUpiNameEdit.hint = "Bank name"
+                }
+                BankUpiType.UPI -> {
+                    tvExisting.text = "Existing UPI Apps"
+                    bankUpiNameEdit.hint = "UPI App name"
+                }
+                BankUpiType.WALLET -> {
+                    tvExisting.text = "Existing Wallets"
+                    bankUpiNameEdit.hint = "Wallet name"
+                }
+            }
         }
         
         // Initially show banks
@@ -700,6 +725,7 @@ class MainActivity : AppCompatActivity() {
             when (checkedId) {
                 R.id.rbBank -> updateListForType(BankUpiType.BANK)
                 R.id.rbUpi -> updateListForType(BankUpiType.UPI)
+                R.id.rbWallet -> updateListForType(BankUpiType.WALLET)
             }
         }
         
@@ -710,10 +736,11 @@ class MainActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
             
-            val type = if (rgType.checkedRadioButtonId == R.id.rbBank) {
-                BankUpiType.BANK
-            } else {
-                BankUpiType.UPI
+            val type = when (rgType.checkedRadioButtonId) {
+                R.id.rbBank -> BankUpiType.BANK
+                R.id.rbUpi -> BankUpiType.UPI
+                R.id.rbWallet -> BankUpiType.WALLET
+                else -> BankUpiType.BANK
             }
             
             val bankUpi = BankUpi(name = name, type = type)
@@ -734,8 +761,14 @@ class MainActivity : AppCompatActivity() {
         editText.setText(bankUpi.name)
         editText.hint = "Name"
         
+        val typeName = when (bankUpi.type) {
+            BankUpiType.BANK -> "Bank"
+            BankUpiType.UPI -> "UPI App"
+            BankUpiType.WALLET -> "Wallet"
+        }
+        
         AlertDialog.Builder(this)
-            .setTitle("Edit ${if (bankUpi.type == BankUpiType.BANK) "Bank" else "UPI App"}")
+            .setTitle("Edit $typeName")
             .setView(editText)
             .setPositiveButton("Save") { _, _ ->
                 val newName = editText.text.toString().trim()
@@ -1028,7 +1061,7 @@ class MainActivity : AppCompatActivity() {
             when {
                 paymentMethodName.contains("Credit", ignoreCase = true) || paymentMethodName.contains("Debit", ignoreCase = true) -> {
                     bankUpiLayout.visibility = View.VISIBLE
-                    bankUpiLabel.text = "Bank Name"
+                    bankUpiLabel.text = "🏦 Bank Name"
                     
                     val banks = bankUpiList.filter { it.type == BankUpiType.BANK }
                     val bankNames = mutableListOf("Select Bank")
@@ -1048,7 +1081,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 paymentMethodName.contains("UPI", ignoreCase = true) -> {
                     bankUpiLayout.visibility = View.VISIBLE
-                    bankUpiLabel.text = "UPI App"
+                    bankUpiLabel.text = "📱 UPI App"
                     
                     val upiApps = bankUpiList.filter { it.type == BankUpiType.UPI }
                     val upiNames = mutableListOf("Select UPI App")
@@ -1063,6 +1096,26 @@ class MainActivity : AppCompatActivity() {
                         val upiIndex = upiApps.indexOfFirst { it.name == expense.upiApp }
                         if (upiIndex >= 0) {
                             bankUpiSpinner.setSelection(upiIndex + 1)
+                        }
+                    }
+                }
+                paymentMethodName.contains("Wallet", ignoreCase = true) -> {
+                    bankUpiLayout.visibility = View.VISIBLE
+                    bankUpiLabel.text = "👛 Wallet"
+                    
+                    val wallets = bankUpiList.filter { it.type == BankUpiType.WALLET }
+                    val walletNames = mutableListOf("Select Wallet")
+                    walletNames.addAll(wallets.map { it.name })
+                    
+                    val walletAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, walletNames)
+                    walletAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                    bankUpiSpinner.adapter = walletAdapter
+                    
+                    // Pre-select wallet if editing (stored in bankName field)
+                    if (expense?.bankName != null) {
+                        val walletIndex = wallets.indexOfFirst { it.name == expense.bankName }
+                        if (walletIndex >= 0) {
+                            bankUpiSpinner.setSelection(walletIndex + 1)
                         }
                     }
                 }

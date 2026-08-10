@@ -13,5 +13,6 @@ data class BankUpi(
 
 enum class BankUpiType {
     BANK,
-    UPI
+    UPI,
+    WALLET
 }

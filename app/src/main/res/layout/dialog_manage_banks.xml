@@ -9,7 +9,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Manage Banks/UPI Apps"
+        android:text="Manage Banks/UPI Apps/Wallets"
         android:textSize="18sp"
         android:textStyle="bold"
         android:layout_marginBottom="16dp" />
@@ -25,7 +25,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:hint="Bank/UPI name"
+            android:hint="Bank/UPI/Wallet name"
             android:inputType="text" />
 
         <Button
@@ -59,6 +59,13 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="UPI App" />
+
+        <RadioButton
+            android:id="@+id/rbWallet"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Wallet" />
 
     </RadioGroup>
 
