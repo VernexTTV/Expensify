@@ -78,4 +78,30 @@ interface ExpenseDao {
         bankName: String?,
         upiApp: String?
     ): LiveData<Double?>
+    
+    // Search methods - searches by description, bank name, UPI app, payment method, and expense source
+    @Query("""
+        SELECT e.* FROM expenses e 
+        LEFT JOIN payment_methods pm ON e.paymentMethodId = pm.id 
+        LEFT JOIN expense_sources es ON e.expenseSourceId = es.id 
+        WHERE (e.bankName LIKE '%' || :query || '%' 
+        OR e.upiApp LIKE '%' || :query || '%' 
+        OR e.description LIKE '%' || :query || '%'
+        OR pm.name LIKE '%' || :query || '%'
+        OR es.name LIKE '%' || :query || '%')
+        ORDER BY e.date DESC
+    """)
+    fun searchExpenses(query: String): LiveData<List<Expense>>
+    
+    @Query("""
+        SELECT SUM(e.amount) FROM expenses e 
+        LEFT JOIN payment_methods pm ON e.paymentMethodId = pm.id 
+        LEFT JOIN expense_sources es ON e.expenseSourceId = es.id 
+        WHERE (e.bankName LIKE '%' || :query || '%' 
+        OR e.upiApp LIKE '%' || :query || '%' 
+        OR e.description LIKE '%' || :query || '%'
+        OR pm.name LIKE '%' || :query || '%'
+        OR es.name LIKE '%' || :query || '%')
+    """)
+    fun searchExpensesTotal(query: String): LiveData<Double?>
 }

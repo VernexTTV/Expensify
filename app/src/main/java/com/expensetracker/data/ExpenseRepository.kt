@@ -56,4 +56,12 @@ class ExpenseRepository(private val expenseDao: ExpenseDao) {
     ): LiveData<Double?> {
         return expenseDao.getFilteredTotal(startDate, endDate, categoryId, paymentMethodId, bankName, upiApp)
     }
+    
+    fun searchExpenses(query: String): LiveData<List<Expense>> {
+        return expenseDao.searchExpenses(query)
+    }
+    
+    fun searchExpensesTotal(query: String): LiveData<Double?> {
+        return expenseDao.searchExpensesTotal(query)
+    }
 }

@@ -417,6 +417,42 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
                state.expenseSourceIds.isNotEmpty()
     }
     
+    // Search functionality
+    private var isSearching = false
+    
+    fun searchExpenses(query: String) {
+        if (query.isBlank()) {
+            clearSearch()
+            return
+        }
+        
+        isSearching = true
+        val searchResults = repository.searchExpenses(query)
+        _currentExpenses.value = searchResults
+        
+        val searchTotal = repository.searchExpensesTotal(query)
+        _currentTotal.value = searchTotal
+    }
+    
+    fun clearSearch() {
+        isSearching = false
+        // Return to filtered view if filters are active, otherwise show all
+        if (isFiltering()) {
+            // Re-apply current filters
+            val state = _filterState.value!!
+            applyFilters(
+                state.minAmount, state.maxAmount, state.startDate, state.endDate,
+                state.paymentMethodIds, state.categoryIds, state.expenseSourceIds,
+                state.selectedMonth, state.selectedYear
+            )
+        } else {
+            _currentExpenses.value = allExpenses
+            _currentTotal.value = totalExpenses
+        }
+    }
+    
+    fun isSearching(): Boolean = isSearching
+    
     data class CategorySummary(
         val categoryName: String,
         val totalAmount: Double

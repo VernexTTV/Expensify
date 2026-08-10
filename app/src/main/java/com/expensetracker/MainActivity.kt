@@ -191,6 +191,29 @@ class MainActivity : AppCompatActivity() {
                 showFilterDialog()
             }
             
+            android.util.Log.d("ExpenseTracker", "Step 17: Setup SearchView")
+            // Setup SearchView
+            val searchView: androidx.appcompat.widget.SearchView = findViewById(R.id.searchView)
+            searchView.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
+                override fun onQueryTextSubmit(query: String?): Boolean {
+                    query?.let {
+                        if (it.isNotBlank()) {
+                            viewModel.searchExpenses(it)
+                        }
+                    }
+                    return true
+                }
+                
+                override fun onQueryTextChange(newText: String?): Boolean {
+                    if (newText.isNullOrBlank()) {
+                        viewModel.clearSearch()
+                    } else {
+                        viewModel.searchExpenses(newText)
+                    }
+                    return true
+                }
+            })
+            
             android.util.Log.d("ExpenseTracker", "=== MainActivity onCreate SUCCESS ===")
         } catch (e: Exception) {
             android.util.Log.e("ExpenseTracker", "=== MainActivity onCreate FAILED ===", e)
