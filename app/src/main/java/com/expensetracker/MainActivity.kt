@@ -209,7 +209,7 @@ class MainActivity : AppCompatActivity() {
                 
                 // Get the search EditText
                 val searchEditText = searchView.findViewById<android.widget.EditText>(androidx.appcompat.R.id.search_src_text)
-                searchEditText?.textSize = 13f // Increased text size for better readability
+                searchEditText?.textSize = 12f // Increased text size for better readability
                 searchEditText?.setPaddingRelative(4, 0, 0, 0) // Minimal left padding
                 
                 // Get the search icon and remove all margins/padding
